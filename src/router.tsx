@@ -1,12 +1,21 @@
+import type { ReactNode } from 'react'
 import { type Location, Navigate, Route, Routes } from 'react-router-dom'
 
+import { useReader } from './lib/reader'
 import {
+  ArticleMobile,
   ArticlePage,
+  ContactMobile,
   ContactPage,
+  ExperienceMobile,
   ExperiencePage,
+  JournalMobile,
   JournalPage,
+  MapMobile,
   MapPage,
+  ProfileMobile,
   ProfilePage,
+  SignalLostMobile,
   SignalLostPage,
 } from './pages'
 
@@ -17,47 +26,55 @@ const REDIRECTS: Record<string, string> = {
   '/uplink': '/contact',
 }
 
-export const AppRouter = ({ location }: { location: Location }) => (
-  <Routes location={location}>
-    <Route
-      path="/"
-      element={<MapPage />}
-    />
-    <Route
-      path="/profile"
-      element={<ProfilePage />}
-    />
-    <Route
-      path="/experience"
-      element={<ExperiencePage />}
-    />
-    <Route
-      path="/blog"
-      element={<JournalPage />}
-    />
-    <Route
-      path="/blog/:slug"
-      element={<ArticlePage />}
-    />
-    <Route
-      path="/contact"
-      element={<ContactPage />}
-    />
-    {Object.entries(REDIRECTS).map(([from, to]) => (
+// Phones get their own layout of every spread; both read the same content sections.
+const pick = (isPhone: boolean, desktop: ReactNode, mobile: ReactNode) =>
+  isPhone ? mobile : desktop
+
+export const AppRouter = ({ location }: { location: Location }) => {
+  const { isPhone } = useReader()
+
+  return (
+    <Routes location={location}>
       <Route
-        key={from}
-        path={from}
-        element={
-          <Navigate
-            to={to}
-            replace
-          />
-        }
+        path="/"
+        element={pick(isPhone, <MapPage />, <MapMobile />)}
       />
-    ))}
-    <Route
-      path="*"
-      element={<SignalLostPage />}
-    />
-  </Routes>
-)
+      <Route
+        path="/profile"
+        element={pick(isPhone, <ProfilePage />, <ProfileMobile />)}
+      />
+      <Route
+        path="/experience"
+        element={pick(isPhone, <ExperiencePage />, <ExperienceMobile />)}
+      />
+      <Route
+        path="/blog"
+        element={pick(isPhone, <JournalPage />, <JournalMobile />)}
+      />
+      <Route
+        path="/blog/:slug"
+        element={pick(isPhone, <ArticlePage />, <ArticleMobile />)}
+      />
+      <Route
+        path="/contact"
+        element={pick(isPhone, <ContactPage />, <ContactMobile />)}
+      />
+      {Object.entries(REDIRECTS).map(([from, to]) => (
+        <Route
+          key={from}
+          path={from}
+          element={
+            <Navigate
+              to={to}
+              replace
+            />
+          }
+        />
+      ))}
+      <Route
+        path="*"
+        element={pick(isPhone, <SignalLostPage />, <SignalLostMobile />)}
+      />
+    </Routes>
+  )
+}

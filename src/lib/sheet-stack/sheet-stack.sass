@@ -323,7 +323,8 @@ body[data-fx='reduced'] .sheet-scene
     background: rgba(10, 10, 11, 0.82)
     border: 1px solid var(--app-color-void-line)
 
-.sheet-scene[data-view='single'] .plate
+.sheet-scene[data-view='single'] .plate,
+.sheet-scene[data-view='phone'] .plate
     &--left,
     &--right,
     &--figure
@@ -334,6 +335,83 @@ body[data-fx='reduced'] .sheet-scene
     .plate__caption
         display: none
 
+// Phone: a vertical deck. The front sheet spans the width; each stacked sheet drops one peek lower,
+// so its bottom edge shows as a full-width tab. Depth still comes only from --layer-depth.
+// The scene is flattened: perspective would pull deeper tabs toward the vanishing point and
+// misalign them, and a flat context lets z-index order the deck.
+.sheet-scene[data-view='phone']
+    --parallax-tilt: 0deg
+    --parallax-cap: 0px
+    --sheet-step-blur: 0px
+    --sheet-step-dim: 0.07
+    perspective: none
+
+    .sheet-scene__rig,
+    .sheet-stack
+        transform-style: flat
+
+    .sheet-stack
+        --sheet-peek: 2.25rem
+        inset: var(--phone-stack-top, var(--phone-header-height)) 0 0 0
+        touch-action: pan-y
+
+    .sheet
+        top: 0
+        bottom: auto
+        width: 100%
+        height: calc(100% - (var(--sheet-count) - 1) * var(--sheet-peek))
+        transform-origin: 50% 100%
+        transform: translateY(calc(var(--layer-depth) * var(--sheet-peek) + var(--sheet-nudge))) scale(calc(1 - var(--layer-depth) * 0.012))
+        filter: none
+
+        &[data-state='front']
+            filter: none
+
+        &[data-state='stacked']:hover,
+        &[data-state='stacked']:has(:focus-visible)
+            --sheet-nudge: 0.3rem
+            filter: none
+
+        &[data-promoted]
+            animation-name: sheet-pull-phone
+
+    .sheet__paper
+        border-width: 2px 0
+
+    .sheet__header
+        padding: 0.55rem 0.9rem 0.45rem
+
+    .sheet__title
+        font-size: 1.15rem
+
+    .sheet__body
+        padding: 0.8rem 0.9rem 1.1rem
+
+        .sheet[data-edge='torn'] &
+            padding-bottom: 1.6rem
+
+    .sheet__spine-strip
+        top: auto
+        left: 0
+        width: 100%
+        height: var(--sheet-peek)
+        flex-direction: row
+        align-items: center
+        gap: 0.65rem
+        padding: 0 0.9rem
+
+    .sheet__spine-title,
+    .sheet__spine-teaser
+        writing-mode: horizontal-tb
+        transform: none
+
+    .sheet__spine-title
+        flex-shrink: 0
+        font-size: 0.95rem
+
+    .sheet__spine-teaser
+        min-width: 0
+
 @keyframes sheet-pull
     0%
         translate: 0 0 0
@@ -341,6 +419,14 @@ body[data-fx='reduced'] .sheet-scene
         translate: 32% -2% 60px
     100%
         translate: 0 0 0
+
+@keyframes sheet-pull-phone
+    0%
+        translate: 0 0
+    35%
+        translate: 0 8%
+    100%
+        translate: 0 0
 
 @keyframes plate-jitter
     0%, 82%, 100%

@@ -1,18 +1,8 @@
-import {
-  entryPath,
-  formatSpreadNumber,
-  type SpreadMeta,
-  SPREADS,
-} from '@/content/spreads'
-import {
-  formatCompactCount,
-  formatCount,
-  formatPostDate,
-  getJournalManifest,
-  type PostSummary,
-} from '@/services'
+import { type PerkIcon, perkIconUrl, SITE_ROUTE, type SiteStop } from '@/content/site-map'
 
 import { seeded } from './seeded'
+
+export { type PerkIcon, perkIconUrl }
 
 /** Shared coordinate space for the circuit board, the perk tiles and the backdrop waves. */
 export const MAP_WIDTH = 1200
@@ -22,22 +12,13 @@ export const PERK_SIZE = 62
 
 type Point = readonly [number, number]
 
-export type MapStop = {
-  id: string
-  kind: 'root' | 'chapter' | 'entry' | 'archive'
-  /** Shown in the tip: the spread number for chapters, the filing position for entries. */
-  number: string
-  spread: SpreadMeta
+/** A website-map stop placed on the board. */
+export type MapStop = SiteStop & {
   x: number
   y: number
-  /** 0 is the Map itself, 1 the chapters, 2 the entries filed under the Journal. */
-  tier: 0 | 1 | 2
-  parent: string | null
-  icon: PerkIcon
   code: string
   /** Which way the tooltip opens, so it stays on the open board. */
   side: 'left' | 'right'
-  place: string
 }
 
 /** A locked socket: board furniture with no spread behind it. */
@@ -58,28 +39,11 @@ const ENTRY_X = 472
 const ROW_STEP = 104
 const ROW_MIN = 96
 const ROW_MAX = 408
-/** The map shows the newest few entries; the Archive perk opens the whole journal. */
-const LATEST_ON_MAP = 3
-
-export type PerkIcon =
-  | 'map'
-  | 'profile'
-  | 'experience'
-  | 'journal'
-  | 'contact'
-  | 'entry'
-  | 'archive'
-  | 'locked'
-
-/** Perk art is white line work on black, used as a luminance mask so each state tints it. */
-export const perkIconUrl = (icon: PerkIcon) =>
-  `url('/assets/art/perks/perk-${icon}.webp')`
-
-const CHAPTERS: Record<string, { row: number; icon: PerkIcon; place: string }> = {
-  profile: { row: 96, icon: 'profile', place: 'Identity core' },
-  experience: { row: 200, icon: 'experience', place: 'Combat record' },
-  journal: { row: 304, icon: 'journal', place: 'Memory shards' },
-  contact: { row: 408, icon: 'contact', place: 'Open channel' },
+const CHAPTER_ROWS: Record<string, number> = {
+  profile: 96,
+  experience: 200,
+  journal: 304,
+  contact: 408,
 }
 
 /** Tile centres sit on a 4-unit grid so bundles meet the connector pins squarely. */
@@ -89,7 +53,7 @@ const codeOf = (index: number) => `PRK_${String(index + 1).padStart(4, '0')}`
 
 // A column of entries centres on the Journal row, then slides to stay inside the board.
 const entryRows = (count: number) => {
-  const centre = CHAPTERS.journal.row
+  const centre = CHAPTER_ROWS.journal
   if (count === 0) return []
   const rows = Array.from(
     { length: count },
@@ -100,103 +64,21 @@ const entryRows = (count: number) => {
   return rows.map((row) => snap(row + shift))
 }
 
-const entrySpread = (post: PostSummary): SpreadMeta => ({
-  id: `post:${post.slug}`,
-  path: entryPath(post.slug),
-  label: post.title,
-  chapter: 'Journal',
-  kind: 'split',
-  teaser: post.summary,
-  date: post.date,
-})
-
+// Places each website-map stop on the board: the root at the left, chapters in a column on their
+// rows, and the Journal's entries and archive in a column beside it.
 const buildRoute = (): MapStop[] => {
-  const { latest, total } = getJournalManifest()
-  const shown = latest.slice(0, LATEST_ON_MAP)
-  const rows = entryRows(shown.length + (total > 0 ? 1 : 0))
-  const stops: MapStop[] = []
+  const rows = entryRows(SITE_ROUTE.filter((stop) => stop.tier === 2).length)
+  let entryRow = 0
 
-  // Keyboard order is reading order: chapters, with the Journal's entries right after it.
-  SPREADS.forEach((spread, index) => {
-    const number = formatSpreadNumber(index)
-    if (spread.path === '/') {
-      stops.push({
-        id: spread.id,
-        kind: 'root',
-        number,
-        spread,
-        x: ROOT[0],
-        y: ROOT[1],
-        tier: 0,
-        parent: null,
-        icon: 'map',
-        code: '',
-        side: 'right',
-        place: 'You are here',
-      })
-      return
-    }
-
-    const chapter = CHAPTERS[spread.id]
-    if (!chapter) return
-    stops.push({
-      id: spread.id,
-      kind: 'chapter',
-      number,
-      spread,
-      x: CHAPTER_X,
-      y: chapter.row,
-      tier: 1,
-      parent: 'map',
-      icon: chapter.icon,
-      code: '',
-      side: 'right',
-      place: chapter.place,
-    })
-
-    if (spread.id !== 'journal') return
-    shown.forEach((post, row) => {
-      stops.push({
-        id: `post:${post.slug}`,
-        kind: 'entry',
-        number: `#${formatCount(post.position)}`,
-        spread: entrySpread(post),
-        x: ENTRY_X,
-        y: rows[row],
-        tier: 2,
-        parent: 'journal',
-        icon: 'entry',
-        code: '',
-        side: 'right',
-        place: `Filed ${formatPostDate(post.date)}`,
-      })
-    })
-    if (total > 0) {
-      stops.push({
-        id: 'archive',
-        kind: 'archive',
-        number: formatCompactCount(total),
-        spread: {
-          id: 'archive',
-          path: spread.path,
-          label: 'Archive',
-          chapter: 'Journal',
-          kind: 'paper',
-          teaser: `All ${formatCount(total)} entries: search, filter by tag, browse by month.`,
-        },
-        x: ENTRY_X,
-        y: rows[shown.length],
-        tier: 2,
-        parent: 'journal',
-        icon: 'archive',
-        code: '',
-        side: 'right',
-        place: `${formatCount(total)} entries filed`,
-      })
-    }
+  return SITE_ROUTE.map((stop, index) => {
+    const [x, y]: Point =
+      stop.tier === 0
+        ? ROOT
+        : stop.tier === 1
+          ? [CHAPTER_X, CHAPTER_ROWS[stop.id] ?? ROOT[1]]
+          : [ENTRY_X, rows[entryRow++]]
+    return { ...stop, x, y, code: codeOf(index), side: 'right' }
   })
-
-  return stops.map((stop, index) => ({ ...stop, code: codeOf(index) }))
 }
 
 /** Every perk on the board, in reading order: the counter, prev/next and the map agree. */

@@ -19,6 +19,12 @@ type SheetProps = {
   children: ReactNode
 }
 
+/** A sheet's identity and dress, shared by the desktop and mobile layouts of a spread. */
+export type SheetMeta = Pick<
+  SheetProps,
+  'id' | 'index' | 'title' | 'teaser' | 'treatment' | 'edge'
+>
+
 export const Sheet = ({
   id,
   index,

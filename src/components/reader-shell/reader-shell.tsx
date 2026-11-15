@@ -3,10 +3,11 @@ import './reader-shell.sass'
 import type { ReactNode } from 'react'
 import type { Location } from 'react-router-dom'
 
-import { useRecordVisit } from '@/lib/reader'
+import { useReader, useRecordVisit } from '@/lib/reader'
 import { SpreadTransition } from '@/lib/spread-transition'
 
 import { BottomToolbar } from './bottom-toolbar'
+import { NavDrawer } from './nav-drawer'
 import { ReaderBleed } from './reader-bleed'
 import { ReaderHotkeys } from './reader-hotkeys'
 import { SpreadAnnouncer } from './spread-announcer'
@@ -19,15 +20,18 @@ type ReaderShellProps = {
 
 export const ReaderShell = ({ renderSpread }: ReaderShellProps) => {
   useRecordVisit()
+  const { viewMode, isPhone } = useReader()
 
   return (
-    <div className="reader">
+    <div
+      className="reader"
+      data-view={viewMode}>
       <a
         href="#main"
         className="reader__skip">
         Skip to spread
       </a>
-      <TopBar />
+      {isPhone ? <NavDrawer /> : <TopBar />}
       <main
         id="main"
         tabIndex={-1}
@@ -36,8 +40,12 @@ export const ReaderShell = ({ renderSpread }: ReaderShellProps) => {
           <SpreadTransition>{renderSpread}</SpreadTransition>
         </SpreadStage>
       </main>
-      <ReaderBleed />
-      <BottomToolbar />
+      {!isPhone && (
+        <>
+          <ReaderBleed />
+          <BottomToolbar />
+        </>
+      )}
       <SpreadAnnouncer />
       <ReaderHotkeys />
     </div>

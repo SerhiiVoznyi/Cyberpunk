@@ -292,6 +292,21 @@
     .spread-counter__label
         display: none
 
+// Phone: no chrome rows. The stage fills the safe area edge to edge; navigation is in the drawer.
+.reader[data-view='phone']
+    grid-template-rows: minmax(0, 1fr)
+
+    .reader__main
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)
+
+.spread-stage[data-view='phone']
+    width: 100cqw
+    height: 100cqh
+    aspect-ratio: auto
+
+    .spread-stage__frame
+        display: none
+
 @media (prefers-reduced-motion: reduce)
     .top-bar__pulse
         animation: none

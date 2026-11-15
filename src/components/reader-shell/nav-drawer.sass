@@ -1,0 +1,132 @@
+@use '../../styles/mixins' as *
+
+// Mirrors the disclaimer tab on the right: same square, same row as the spread's title.
+.nav-drawer-trigger
+    position: fixed
+    top: env(safe-area-inset-top)
+    left: env(safe-area-inset-left)
+    z-index: 105
+
+    .hud-button
+        width: var(--phone-touch)
+        height: var(--phone-touch)
+        font-size: 1.35rem
+        background: var(--app-color-void)
+
+.nav-drawer
+    --drawer-slide: 320ms
+    position: fixed
+    inset: 0 auto 0 0
+    width: min(340px, 86vw)
+    max-width: 100vw
+    height: 100dvh
+    max-height: 100dvh
+    margin: 0
+    padding: 0
+    color: var(--app-text-color-main)
+    background: var(--app-color-void)
+    border: 0
+    box-shadow: inset -1px 0 0 var(--app-color-cyan-dim), 6px 0 0 rgba(0, 0, 0, 0.55), 24px 0 40px rgba(0, 0, 0, 0.45)
+    transform: translateX(-100%)
+    transition: transform var(--drawer-slide) var(--spread-settle-ease), display var(--drawer-slide) allow-discrete, overlay var(--drawer-slide) allow-discrete
+
+    &[open]
+        transform: translateX(0)
+
+        @starting-style
+            transform: translateX(-100%)
+
+    &::backdrop
+        background-color: rgba(10, 10, 11, 0)
+        transition: background-color var(--drawer-slide) ease, display var(--drawer-slide) allow-discrete, overlay var(--drawer-slide) allow-discrete
+
+    &[open]::backdrop
+        background-color: rgba(10, 10, 11, 0.72)
+
+        @starting-style
+            background-color: rgba(10, 10, 11, 0)
+
+    @media (prefers-reduced-motion: reduce)
+        transition: none
+
+        &::backdrop
+            transition: none
+
+    body[data-fx='reduced'] &,
+    body[data-fx='reduced'] &::backdrop
+        transition: none
+
+    .hud-button
+        width: var(--phone-touch)
+        height: var(--phone-touch)
+        font-size: 1.15rem
+
+.nav-drawer__body
+    display: flex
+    flex-direction: column
+    gap: 1rem
+    box-sizing: border-box
+    height: 100%
+    padding: calc(env(safe-area-inset-top) + 0.5rem) 1rem calc(env(safe-area-inset-bottom) + 1rem) calc(env(safe-area-inset-left) + 1rem)
+    overflow-y: auto
+    overscroll-behavior: contain
+    border-right: 3px solid var(--app-color-cyan)
+
+.nav-drawer__header
+    display: flex
+    align-items: center
+    gap: 0.4rem
+
+.nav-drawer__wordmark
+    flex: 1
+    min-width: 0
+    text-decoration: none
+
+    .display-title
+        display: block
+        font-size: 1.3rem
+
+.nav-drawer__kicker
+    margin: 0
+    @include hud-label
+    font-size: 0.72rem
+    font-weight: 400
+    color: var(--app-text-color-muted)
+
+.nav-drawer__chapter
+    color: var(--app-color-cyan)
+
+.nav-drawer
+    .spread-counter
+        justify-content: space-between
+
+    .spread-counter__readout
+        flex: 1
+        text-align: center
+
+    // The desktop toolbar hides these on narrow screens; the drawer has room for the full player.
+    .spread-counter__label,
+    .soundtrack__readout
+        display: initial
+
+    .soundtrack__skip
+        display: inline-grid
+
+.nav-drawer__player
+    display: flex
+    flex-wrap: wrap
+    align-items: center
+    gap: 0.4rem
+    margin-top: auto
+    padding-top: 0.75rem
+    border-top: 1px solid var(--app-color-void-line)
+
+    .soundtrack
+        flex: 1
+        min-width: 0
+        padding-left: 0.7rem
+
+    .soundtrack__readout
+        flex: 1
+        max-width: none
+        min-width: 0

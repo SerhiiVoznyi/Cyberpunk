@@ -5,7 +5,7 @@ Invariants of the reader, the sheet stack and the page turn. Breaking one of the
 ## Registry and routing
 
 - Every navigable spread has an entry in `SPREADS` in `src/content/spreads.ts`; that order defines the counter, prev/next, arrow keys, turn direction and the website map route. `SPREADS` holds the chapters only; journal entries (`/blog/:slug`) belong to the Journal spread and are read between it and the next chapter, newest first, using each entry's `newer`/`older` neighbours (`spreadOrder` gives the turn direction). Never put entries in `SPREADS`: there may be 100k of them.
-- The website map is exact: `MAP_ROUTE` is derived from `SPREADS`, one stop per spread. Connections appear only on hover or focus, between a stop and its reading-order neighbours. Never draw decorative stops or lines that are not pages.
+- The website map is exact: `SITE_ROUTE` (`src/content/site-map.ts`) is derived from `SPREADS`, one stop per spread. The board's `MAP_ROUTE` only adds positions to it, and the phone drawer's `SiteMapList` renders it as is. Connections appear only on hover or focus, between a stop and its reading-order neighbours. Never draw decorative stops or lines that are not pages.
 - Routes live in `src/router.tsx` and render with the `location` passed in by `SpreadTransition`, never the live router location, so the outgoing spread can finish turning.
 - Each route element is remounted per pathname by the transition; do not rely on page state surviving navigation.
 
@@ -35,3 +35,13 @@ Invariants of the reader, the sheet stack and the page turn. Breaking one of the
 ## View modes
 
 - `spread` (2.4:1 stage) and `single` (one page) are both first-class. Single mode is forced below 900px wide or under a 5:4 aspect ratio. Every spread must have single-view overrides via `.page-root[data-view='single']` and the `--single-stack-top` variable.
+- `phone` is the third mode. It is forced by `(max-width: 500px) and (orientation: portrait)`, which is read synchronously so the first frame mounts the right layout. Phone landscape falls back to `single`. `ReaderProvider` exposes `isPhone` and mirrors the mode on `body[data-view]` for UI mounted outside the reader, such as the disclaimer. Zoom is pinned to 1 in phone mode.
+
+## Phone view
+
+- **Layouts:** every route renders its own `<page>.mobile.tsx`, which the router picks with `pick(isPhone, desktop, mobile)`. Both layouts compose the same `<page>-sections.tsx` bodies and `<page>-sheets.ts` metadata. Never copy sheet content into a layout file.
+- **Chrome:** `TopBar`, `BottomToolbar` and `ReaderBleed` are not rendered. Navigation, pagination, the soundtrack and the website map (`SiteMapList` over `SITE_ROUTE`) live in `NavDrawer`, which opens from a fixed button on the left. The disclaimer keeps the right side as a matching fixed button. `BackToMap` is not used.
+- **Title row:** each mobile spread has one `MobileHeader`, which holds the `h1` (`spreadHeading`) and sits between the two fixed buttons. Its height and the deck's top inset share `--phone-stack-top` (default `--phone-header-height`), so a two-line title changes one variable.
+- **Deck:** under `.sheet-scene[data-view='phone']` the stack is a vertical deck. The front sheet is full width, and each stacked sheet drops one `--sheet-peek` lower, so its bottom edge shows as a full-width, horizontal spine tab. Geometry still comes only from `--layer-depth`. The scene is flattened (no perspective, `transform-style: flat`), so tabs line up and `z-index` orders the deck.
+- **Swipe:** `useSwipeDepth` turns a sideways touch swipe into one `advance` step per gesture, with no focus move, and swallows the click that follows. The stack sets `touch-action: pan-y`, so vertical scrolling inside a sheet stays native.
+- **Decoration:** mobile layouts pass `decorated={false}` to sections and render no decals, captions, kickers or stickers. Inputs use at least `1rem` type so iOS does not zoom on focus.

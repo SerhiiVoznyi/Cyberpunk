@@ -3,13 +3,8 @@ import './article.sass'
 import { Suspense, use } from 'react'
 import { useParams } from 'react-router-dom'
 
-import { BackToMap, CyanPill, DisplayTitle, PlateCard, TagChip } from '@/components'
-import {
-  formatSpreadNumber,
-  JOURNAL_INDEX,
-  readModePath,
-  SPREADS,
-} from '@/content/spreads'
+import { BackToMap, CyanPill, DisplayTitle } from '@/components'
+import { readModePath } from '@/content/spreads'
 import type { CSSVars } from '@/lib/cx'
 import {
   Plate,
@@ -18,9 +13,11 @@ import {
   SheetStack,
   SheetStackProvider,
 } from '@/lib/sheet-stack'
-import { fetchPost, formatCount, formatPostDate, getJournalManifest } from '@/services'
+import { fetchPost, formatPostDate, getJournalManifest } from '@/services'
 
 import { SignalLostPage } from '../signal-lost/signal-lost'
+import { ArticleEntry, ArticleMetadata, ArticleRelated } from './article-sections'
+import { ARTICLE_ORDER, ARTICLE_SHEETS } from './article-sheets'
 
 const ArticleLoading = () => (
   <SheetScene
@@ -57,7 +54,7 @@ const ArticleContent = ({ slug }: { slug: string }) => {
       kind="split"
       className="article"
       overlay={<BackToMap className="spread-back" />}>
-      <SheetStackProvider initialOrder={['entry', 'metadata', 'related']}>
+      <SheetStackProvider initialOrder={ARTICLE_ORDER}>
         <Plate
           src={post.cover ?? '/assets/art/city-plate-night.webp'}
           depth={2}
@@ -88,75 +85,19 @@ const ArticleContent = ({ slug }: { slug: string }) => {
           label="Article sheets"
           region="left">
           <Sheet
-            id="entry"
-            index={1}
-            title="Entry"
+            {...ARTICLE_SHEETS.entry}
             teaser={post.summary}
             aside={<>{post.readingMinutes} min read</>}>
-            <p className="sheet-text sheet-text--lead">{post.summary}</p>
-            <div
-              className="prose"
-              dangerouslySetInnerHTML={{ __html: post.html }}
+            <ArticleEntry post={post} />
+          </Sheet>
+          <Sheet {...ARTICLE_SHEETS.metadata}>
+            <ArticleMetadata
+              post={post}
+              total={total}
             />
           </Sheet>
-          <Sheet
-            id="metadata"
-            index={2}
-            title="Metadata"
-            teaser="Filed, read time, frequencies"
-            treatment="ink">
-            <dl className="data-rows">
-              <dt>Filed</dt>
-              <dd>
-                <time dateTime={post.date}>{formatPostDate(post.date)}</time>
-              </dd>
-              <dt>Read time</dt>
-              <dd>{post.readingMinutes} min</dd>
-              <dt>Spread</dt>
-              <dd>
-                {formatSpreadNumber(JOURNAL_INDEX)} of{' '}
-                {String(SPREADS.length).padStart(2, '0')}
-              </dd>
-              <dt>Plate</dt>
-              <dd>
-                {formatCount(post.position)} of {formatCount(total)}
-              </dd>
-              {post.tags.length > 0 && (
-                <>
-                  <dt>Tags</dt>
-                  <dd>
-                    <ul className="chip-row">
-                      {post.tags.map((tag) => (
-                        <li key={tag}>
-                          <TagChip tag={tag} />
-                        </li>
-                      ))}
-                    </ul>
-                  </dd>
-                </>
-              )}
-            </dl>
-          </Sheet>
-          <Sheet
-            id="related"
-            index={3}
-            title="Related"
-            teaser="More journal entries"
-            treatment="yellow"
-            edge="notched">
-            {post.related.length === 0 ? (
-              <p className="sheet-text">No related entries yet.</p>
-            ) : (
-              <div className="article__related">
-                {post.related.map((item) => (
-                  <PlateCard
-                    key={item.slug}
-                    post={item}
-                    compact
-                  />
-                ))}
-              </div>
-            )}
+          <Sheet {...ARTICLE_SHEETS.related}>
+            <ArticleRelated post={post} />
           </Sheet>
         </SheetStack>
       </SheetStackProvider>

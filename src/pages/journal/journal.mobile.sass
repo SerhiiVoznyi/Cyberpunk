@@ -1,0 +1,25 @@
+.journal-m
+    // iOS Safari zooms the page into any field set below 16px when it takes focus.
+    .journal__search input,
+    .journal__tag-search input,
+    .journal__jump input
+        font-size: 1rem
+
+    .journal__grid
+        grid-template-columns: minmax(0, 1fr)
+        gap: 0.75rem
+
+    .journal__search label,
+    .journal__tag-search
+        flex-basis: 100%
+        max-width: none
+
+    .journal__pager
+        justify-content: center
+
+    .journal__jump
+        margin-left: 0
+
+    .journal__log li
+        grid-template-columns: minmax(0, 1fr)
+        gap: 0.2rem

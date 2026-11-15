@@ -1,8 +1,10 @@
 import { type ReactNode, useRef } from 'react'
 
 import { type CSSVars, cx } from '../cx'
+import { useReader } from '../reader'
 import { useSheetStack } from './sheet-stack-context'
 import { useScrollDepth } from './use-scroll-depth'
+import { useSwipeDepth } from './use-swipe-depth'
 
 export type SheetRegion = 'full' | 'left' | 'right' | 'map'
 
@@ -23,7 +25,9 @@ export const SheetStack = ({
 }: SheetStackProps) => {
   const ref = useRef<HTMLDivElement>(null)
   const { order, advance } = useSheetStack()
+  const { isPhone } = useReader()
   useScrollDepth(ref, advance, scrollDepth && order.length > 1)
+  useSwipeDepth(ref, advance, isPhone && order.length > 1)
 
   return (
     <div

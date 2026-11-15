@@ -1,0 +1,45 @@
+@use '../../styles/mixins' as *
+
+// Shares its height with the deck's top inset, so a page that needs two title lines sets one variable.
+.mobile-header
+    top: 0
+    left: 0
+    right: 0
+    height: var(--phone-stack-top, var(--phone-header-height))
+    display: flex
+    align-items: center
+    gap: 0.6rem
+    padding: 0 calc(var(--phone-touch) + 0.4rem)
+    background: rgba(10, 10, 11, 0.8)
+    border-bottom: 1px solid var(--app-color-cyan-dim)
+
+.mobile-header__title
+    flex: 1
+    min-width: 0
+
+    &.display-title--md
+        --title-leading: 1.05em
+        font-size: 1.45rem
+
+    .display-title__line
+        overflow: hidden
+        white-space: nowrap
+        text-overflow: ellipsis
+
+    .mobile-header[data-clamp='2'] &
+        &.display-title--md
+            font-size: 1.15rem
+
+        .display-title__line
+            display: -webkit-box
+            white-space: normal
+            -webkit-box-orient: vertical
+            -webkit-line-clamp: 2
+            line-clamp: 2
+
+.mobile-header__kicker
+    flex-shrink: 0
+    margin: 0
+    @include hud-label
+    font-size: 0.68rem
+    color: var(--app-color-cyan)

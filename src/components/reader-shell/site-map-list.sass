@@ -1,0 +1,72 @@
+@use '../../styles/mixins' as *
+
+.site-map-list ol
+    display: flex
+    flex-direction: column
+    gap: 0.15rem
+    margin: 0
+    padding: 0
+    list-style: none
+
+.site-map-list__stop--tier-1
+    padding-left: 0.9rem
+
+.site-map-list__stop--tier-2
+    padding-left: 1.8rem
+
+.site-map-list__link
+    display: flex
+    align-items: center
+    gap: 0.6rem
+    min-height: var(--phone-touch)
+    padding: 0 0.6rem
+    color: var(--app-text-color-main)
+    text-decoration: none
+    border-left: 2px solid var(--app-color-void-line)
+    transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease
+
+    &:hover,
+    &:focus-visible
+        color: var(--app-color-cyan)
+        background: var(--app-color-cyan-ghost)
+        border-left-color: var(--app-color-cyan)
+
+    &[data-visited]
+        border-left-color: var(--app-color-cyan-dim)
+
+    &[aria-current='page']
+        color: var(--app-color-ink)
+        background: var(--app-color-yellow)
+        border-left-color: var(--app-color-yellow)
+
+    body[data-fx='reduced'] &
+        transition: none
+
+.site-map-list__icon
+    flex-shrink: 0
+    width: 1.5rem
+    height: 1.5rem
+    background: currentColor
+    mask: var(--perk-icon) center / contain no-repeat
+    mask-mode: luminance
+
+.site-map-list__number
+    flex-shrink: 0
+    min-width: 2.2rem
+    @include hud-label
+    font-size: 0.7rem
+    opacity: 0.75
+
+.site-map-list__label
+    min-width: 0
+    overflow: hidden
+    text-overflow: ellipsis
+    white-space: nowrap
+    font-family: var(--app-font-display)
+    font-size: 0.95rem
+    font-weight: 600
+    letter-spacing: 0.02em
+    text-transform: uppercase
+
+    .site-map-list__stop--tier-2 &
+        text-transform: none

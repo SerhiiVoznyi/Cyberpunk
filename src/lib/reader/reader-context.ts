@@ -1,6 +1,6 @@
 import { createContext } from 'react'
 
-export type ViewMode = 'spread' | 'single'
+export type ViewMode = 'spread' | 'single' | 'phone'
 export type FxMode = 'full' | 'reduced'
 
 export const ZOOM_MIN = 1
@@ -9,6 +9,8 @@ export const ZOOM_STEP = 0.5
 
 export type ReaderValue = {
   viewMode: ViewMode
+  /** Phone portrait: every route renders its mobile component and the chrome lives in a drawer. */
+  isPhone: boolean
   canToggleView: boolean
   toggleViewMode: () => void
   zoom: number

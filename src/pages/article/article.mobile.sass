@@ -1,0 +1,36 @@
+@use '../../styles/mixins' as *
+
+.article-m
+    --phone-stack-top: 4.25rem
+
+    .article-m__actions
+        display: flex
+        flex-wrap: wrap
+        align-items: center
+        justify-content: space-between
+        gap: 0.5rem 1rem
+        margin-bottom: 0.9rem
+
+    .article-m__filed
+        margin: 0
+        @include hud-label
+        font-size: var(--app-text-small)
+        opacity: 0.8
+
+    // Markdown can carry wide media and tables; they scroll inside the sheet, never past its edge.
+    .prose
+        overflow-wrap: anywhere
+
+        img,
+        video,
+        iframe
+            max-width: 100%
+
+        table
+            display: block
+            max-width: 100%
+            overflow-x: auto
+
+        pre
+            margin-inline: -0.9rem
+            border-left-width: 3px

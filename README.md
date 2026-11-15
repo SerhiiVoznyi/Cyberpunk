@@ -4,12 +4,13 @@ A personal brand site and blog built as an interactive artbook reader in a Cyber
 
 ## Scripts
 
-| Command           | What it does                       |
-| ----------------- | ---------------------------------- |
-| `npm start`       | Vite dev server                    |
-| `npm run build`   | Type-check, then production build  |
-| `npm run lint`    | ESLint with zero warnings allowed  |
-| `npm run preview` | Serve the production build locally |
+| Command           | What it does                                              |
+| ----------------- | --------------------------------------------------------- |
+| `npm run dev`     | Vite dev server                                           |
+| `npm run build`   | Type-check, then production build                         |
+| `npm start`       | Production server (`server.js`): serves `dist/` on `PORT` |
+| `npm run lint`    | ESLint with zero warnings allowed                         |
+| `npm run preview` | Vite preview of the production build                      |
 
 Stack: Vite, React 19, TypeScript, Mantine, React Router, indented Sass, and `marked` for post rendering.
 

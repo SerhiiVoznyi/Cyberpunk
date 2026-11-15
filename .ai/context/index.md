@@ -45,7 +45,7 @@ Routes: `/` Map, `/profile`, `/experience`, `/blog` (Journal), `/blog/:slug` (Ar
 
 ## Scripts
 
-`npm start`, `npm run build` (tsc + Vite), `npm run lint` (zero warnings allowed), `npm run preview`.
+`npm run dev` (Vite dev server), `npm run build` (tsc + Vite), `npm start` (production Express server in `server.js`: serves `dist/` on `PORT`, default 3000, with SPA fallback), `npm run lint` (zero warnings allowed), `npm run preview`.
 
 ## Environment notes
 

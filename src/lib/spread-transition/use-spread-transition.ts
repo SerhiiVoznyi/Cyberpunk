@@ -4,7 +4,7 @@ import { useReducedMotion } from '@mantine/hooks'
 
 import { entrySlugOf, findSpreadIndex, spreadOrder, SPREADS } from '@/content/spreads'
 
-import { useReader, useVisits } from '../reader'
+import { useBreachGate, useReader, useVisits } from '../reader'
 
 export type SpreadPhase = 'idle' | 'exiting' | 'breaching' | 'entering'
 export type TurnDirection = 'forward' | 'backward'
@@ -27,16 +27,20 @@ export const useSpreadTransition = () => {
   const reducedMotion = useReducedMotion()
   const { resetZoom, fx } = useReader()
   const { visited } = useVisits()
+  const lockedNow = useBreachGate().isLocked(location.pathname)
 
   const [displayed, setDisplayed] = useState(location)
+  const [displayedLocked, setDisplayedLocked] = useState(lockedNow)
   const [target, setTarget] = useState(location.pathname)
+  const [targetLocked, setTargetLocked] = useState(lockedNow)
   const [phase, setPhase] = useState<SpreadPhase>('idle')
   const [direction, setDirection] = useState<TurnDirection>('forward')
   const [breach, setBreach] = useState(false)
 
   // Journal entries never breach: there may be thousands, and each one is a first visit.
-  const shouldBreach = (pathname: string) => {
-    if (reducedMotion || fx === 'reduced') return false
+  // A locked route already shows the playable riddle, so it gets no cinematic on top.
+  const shouldBreach = (pathname: string, locked: boolean) => {
+    if (locked || reducedMotion || fx === 'reduced') return false
     if (entrySlugOf(pathname) !== null) return false
     const spread = SPREADS[findSpreadIndex(pathname)]
     return Boolean(spread) && !visited.has(spread.id)
@@ -47,8 +51,15 @@ export const useSpreadTransition = () => {
     const from = spreadOrder(displayed.pathname)
     const to = spreadOrder(location.pathname)
     setTarget(location.pathname)
+    setTargetLocked(lockedNow)
     setDirection(from >= 0 && to >= 0 && to < from ? 'backward' : 'forward')
-    setBreach(shouldBreach(location.pathname))
+    setBreach(shouldBreach(location.pathname, lockedNow))
+    setPhase('exiting')
+  } else if (lockedNow !== targetLocked) {
+    // Cracking (or relocking) the route on screen turns the riddle into the page, or back.
+    setTargetLocked(lockedNow)
+    setDirection('forward')
+    setBreach(false)
     setPhase('exiting')
   } else if (
     location.pathname === displayed.pathname &&
@@ -63,8 +74,9 @@ export const useSpreadTransition = () => {
 
   const commitTurn = useCallback(() => {
     setDisplayed(location)
+    setDisplayedLocked(targetLocked)
     setPhase('entering')
-  }, [location])
+  }, [location, targetLocked])
 
   useEffect(() => {
     if (phase === 'exiting') {
@@ -98,6 +110,7 @@ export const useSpreadTransition = () => {
 
   return {
     displayed,
+    displayedLocked,
     target,
     phase,
     direction,

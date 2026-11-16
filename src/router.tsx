@@ -1,10 +1,13 @@
 import type { ReactNode } from 'react'
 import { type Location, Navigate, Route, Routes } from 'react-router-dom'
 
+import { protectedRuleFor } from './content/breach'
 import { useReader } from './lib/reader'
 import {
   ArticleMobile,
   ArticlePage,
+  BreachMobile,
+  BreachPage,
   ContactMobile,
   ContactPage,
   ExperienceMobile,
@@ -30,8 +33,29 @@ const REDIRECTS: Record<string, string> = {
 const pick = (isPhone: boolean, desktop: ReactNode, mobile: ReactNode) =>
   isPhone ? mobile : desktop
 
-export const AppRouter = ({ location }: { location: Location }) => {
+type AppRouterProps = {
+  location: Location
+  /** The location's protected route is still locked: the riddle stands in for its page. */
+  locked: boolean
+}
+
+export const AppRouter = ({ location, locked }: AppRouterProps) => {
   const { isPhone } = useReader()
+  const rule = protectedRuleFor(location.pathname)
+
+  if (locked && rule) {
+    return pick(
+      isPhone,
+      <BreachPage
+        rule={rule}
+        pathname={location.pathname}
+      />,
+      <BreachMobile
+        rule={rule}
+        pathname={location.pathname}
+      />,
+    )
+  }
 
   return (
     <Routes location={location}>

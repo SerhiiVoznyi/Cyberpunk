@@ -1,0 +1,22 @@
+// Phone: one column, the matrix full width so each cell stays a comfortable touch target.
+.breach-m
+    .breach-game
+        grid-template-columns: minmax(0, 1fr)
+        align-items: start
+        gap: 0.9rem
+
+    .breach-game__matrix
+        max-width: none
+
+    .breach-game__cell
+        font-size: 1rem
+
+    .breach-game__panel
+        gap: 0.7rem
+
+    .breach-game__code
+        min-width: 3rem
+        height: var(--phone-touch)
+
+    .breach-game__status
+        min-height: 0

@@ -6,7 +6,12 @@ import { Link } from 'react-router-dom'
 import { RESET_VISITS_LABEL, ResetStatus } from '@/components'
 import { CHAPTERS } from '@/content/spreads'
 import { type CSSVars, cx } from '@/lib/cx'
-import { type ResetVisitsState, useResetVisits, useVisits } from '@/lib/reader'
+import {
+  type ResetVisitsState,
+  useBreachGate,
+  useResetVisits,
+  useVisits,
+} from '@/lib/reader'
 import { useSheetStack } from '@/lib/sheet-stack'
 import { formatCompactCount, getJournalManifest, prefetchPost } from '@/services'
 
@@ -150,6 +155,7 @@ const Perk = ({
   stop,
   visits,
   reset,
+  iced,
   active,
   linked,
   onAim,
@@ -159,6 +165,8 @@ const Perk = ({
   visits: Visits
   /** The root perk is where the reader already is, so it starts over instead of navigating. */
   reset?: Reset
+  /** The stop's route is behind a breach gate the reader has not cracked yet. */
+  iced: boolean
   active: boolean
   linked: boolean
   onAim: () => void
@@ -194,7 +202,7 @@ const Perk = ({
       <span
         className="skill-tree__face"
         aria-hidden="true">
-        <PerkArt icon={stop.icon} />
+        <PerkArt icon={iced ? 'locked' : stop.icon} />
       </span>
       <span className="skill-tree__name">{stop.spread.label}</span>
       <span className="skill-tree__tip">
@@ -211,7 +219,9 @@ const Perk = ({
             {stop.spread.label}
           </span>
         )}
-        <span className="skill-tree__tip-place">{stop.place}</span>
+        <span className="skill-tree__tip-place">
+          {iced ? 'ICE protected' : stop.place}
+        </span>
         <span
           className="skill-tree__tip-teaser"
           aria-hidden="true">
@@ -270,6 +280,7 @@ export const SkillTree = () => {
   const { order, promote } = useSheetStack()
   const visits = useVisits()
   const reset = useResetVisits()
+  const { isLocked } = useBreachGate()
   const [aimed, setAimed] = useState<string | null>(null)
   const linked = aimed ? neighbours(aimed) : new Set<string>()
 
@@ -319,6 +330,7 @@ export const SkillTree = () => {
             stop={stop}
             visits={visits}
             reset={stop.kind === 'root' ? reset : undefined}
+            iced={isLocked(stop.spread.path)}
             active={order[0] === stop.id}
             linked={linked.has(stop.id)}
             onAim={() => aim(stop)}

@@ -1,0 +1,242 @@
+@use '../../styles/mixins' as *
+
+.breach
+    --single-stack-top: 24%
+
+    .breach__title
+        right: 5%
+        bottom: 9%
+        display: flex
+        flex-direction: column
+        align-items: flex-end
+        gap: 0.4rem
+        padding: 0.9rem 1.2rem 0.8rem
+        background: rgba(10, 10, 11, 0.82)
+        border-right: 4px solid var(--app-color-red)
+
+    .breach__rule
+        margin: 1rem 0
+
+    // The matrix sits beside its readouts, so a whole run fits without scrolling the sheet.
+    .breach-game
+        display: grid
+        grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr)
+        align-items: center
+        gap: 1.1rem
+        min-height: 100%
+
+    .breach-game__matrix
+        display: grid
+        grid-template-columns: repeat(var(--breach-size), minmax(0, 1fr))
+        gap: 0.3rem
+        width: 100%
+        max-width: min(22rem, 58cqh)
+        aspect-ratio: 1
+        justify-self: center
+        transition: opacity 200ms ease
+
+    .breach-game__cell
+        display: grid
+        place-items: center
+        min-width: 0
+        padding: 0
+        font-family: var(--app-font-mono)
+        font-size: clamp(0.78rem, 1.1cqw, 1.05rem)
+        letter-spacing: 0.04em
+        color: rgba(0, 240, 255, 0.4)
+        background: rgba(10, 10, 11, 0.6)
+        border: 1px solid var(--app-color-void-line)
+        transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease
+
+        &[data-line]
+            color: var(--app-color-cyan)
+            background: var(--app-color-cyan-ghost)
+            border-color: var(--app-color-cyan-dim)
+            cursor: pointer
+
+            &:hover,
+            &:focus-visible
+                color: var(--app-color-ink)
+                background: var(--app-color-cyan)
+                border-color: var(--app-color-cyan)
+
+        &[data-marked]
+            color: var(--app-color-ice)
+            box-shadow: inset 0 0 0 2px var(--app-color-ice), 0 0 8px rgba(143, 214, 255, 0.55)
+
+        &[data-picked]
+            color: var(--app-color-ink)
+            background: var(--app-color-yellow)
+            border-color: var(--app-color-yellow)
+
+    .breach-game[data-phase='failed'] .breach-game__matrix
+        opacity: 0.5
+
+    .breach-game__panel
+        display: flex
+        flex-direction: column
+        gap: 0.85rem
+        min-width: 0
+
+    .breach-game__readout,
+    .breach-game__timer
+        display: grid
+        gap: 0.35rem
+
+    .breach-game__label
+        @include hud-label
+        font-size: var(--app-text-small)
+        color: var(--app-text-color-muted)
+
+    .breach-game__codes
+        display: flex
+        flex-wrap: wrap
+        gap: 0.25rem
+        margin: 0
+        padding: 0
+        list-style: none
+
+    .breach-game__code,
+    .breach-game__slot
+        display: grid
+        place-items: center
+        min-width: 1.95rem
+        height: 1.9rem
+        padding: 0 0.3rem
+        font-family: var(--app-font-mono)
+        font-size: 0.95rem
+
+    // Pressing a code lights its twins in the matrix, so a route can be planned before the clock.
+    .breach-game__code
+        color: var(--app-color-yellow)
+        background: none
+        border: 1px solid rgba(252, 238, 10, 0.45)
+        cursor: pointer
+
+        &:hover
+            border-color: var(--app-color-yellow)
+
+        &[data-matched]
+            color: var(--app-color-ink)
+            background: var(--app-color-yellow)
+
+        &[aria-pressed='true']
+            outline: 2px solid var(--app-color-ice)
+            outline-offset: 2px
+
+    .breach-game__slot
+        color: var(--app-color-ink)
+        border: 1px dashed var(--app-color-cyan-dim)
+
+        &[data-filled]
+            background: var(--app-color-yellow)
+            border: 1px solid var(--app-color-yellow)
+
+    .breach-game__track
+        display: block
+        height: 4px
+        background: var(--app-color-void-line)
+
+    .breach-game[data-hurry] .breach-game__track
+        animation: breach-game-hurry 600ms steps(2) infinite
+
+    .breach-game__bar
+        display: block
+        height: 100%
+        background: var(--app-color-red)
+        transform-origin: 0 50%
+
+    // The clock runs from the first pick and freezes where the run ended.
+    .breach-game:not([data-phase='ready']) .breach-game__bar
+        animation: breach-game-timer var(--breach-time) linear forwards
+
+    .breach-game[data-phase='failed'] .breach-game__bar,
+    .breach-game[data-phase='solved'] .breach-game__bar
+        animation-play-state: paused
+
+    .breach-game__status
+        min-height: 2.9em
+        margin: 0
+        font-size: 0.95rem
+        line-height: 1.45
+
+    .breach-game__retry,
+    .breach-game__stamp
+        align-self: flex-start
+        margin: 0
+        padding: 0.55rem 1rem
+        font-family: var(--app-font-display)
+        font-weight: 700
+        letter-spacing: 0.06em
+        text-transform: uppercase
+        color: var(--app-color-ink)
+        background: var(--app-color-yellow)
+        border: 0
+        @include notch-corner-right(10px)
+
+    .breach-game__retry
+        cursor: pointer
+
+        span
+            font-family: var(--app-font-mono)
+            font-weight: 400
+            opacity: 0.7
+
+        &:hover
+            background: var(--app-color-cyan)
+
+    .breach-game__stamp
+        background: var(--app-color-green)
+        animation: breach-game-stamp 220ms steps(3) both
+
+    &[data-view='single']
+        .breach__title
+            top: 9%
+            left: 4%
+            right: auto
+            bottom: auto
+            align-items: flex-start
+            padding: 0
+            background: none
+            border: 0
+
+        .breach-game__matrix
+            max-width: min(22rem, 46cqh)
+
+        .breach-game__cell
+            font-size: clamp(0.78rem, 2cqw, 1.05rem)
+
+@keyframes breach-game-timer
+    from
+        transform: scaleX(1)
+    to
+        transform: scaleX(0)
+
+@keyframes breach-game-hurry
+    50%
+        opacity: 0.35
+
+@keyframes breach-game-stamp
+    from
+        opacity: 0
+        transform: scale(1.3)
+
+// The time limit still applies; the moving bar gives way to the seconds readout in its label.
+body[data-fx='reduced'] .breach
+    .breach-game__track
+        display: none
+
+    .breach-game__stamp
+        animation: none
+
+@media (prefers-reduced-motion: reduce)
+    .breach
+        .breach-game__track
+            display: none
+
+        .breach-game__stamp
+            animation: none
+
+        .breach-game__cell,
+        .breach-game__matrix
+            transition: none

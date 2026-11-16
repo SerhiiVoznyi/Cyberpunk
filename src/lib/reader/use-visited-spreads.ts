@@ -4,6 +4,8 @@ import { useLocalStorage } from '@mantine/hooks'
 
 import { entrySlugOf, findSpreadIndex, SPREADS } from '@/content/spreads'
 
+import { useBreachGate } from './use-breach-gate'
+
 /** Entry slugs remembered individually; older ones only survive in the running count. */
 const ENTRY_MEMORY = 500
 
@@ -54,25 +56,29 @@ export const useVisits = () => {
   )
 }
 
-/** Marks the spread or entry at the current URL as visited. */
+/** Marks the spread or entry at the current URL as visited, once it is past any breach gate. */
 export const useRecordVisit = () => {
   const { pathname } = useLocation()
   const [, setLog] = useVisitStore()
+  const locked = useBreachGate().isLocked(pathname)
 
   useEffect(() => {
+    if (locked) return
     setLog((log) => withVisit(log, pathname))
-  }, [pathname, setLog])
+  }, [pathname, locked, setLog])
 }
 
 export type ResetVisitsState = 'idle' | 'armed' | 'cleared'
 
 /**
  * A two-press "start over": the first press arms it, a second press within a few seconds forgets
- * every visit except the spread on screen, so perks relock and chapters breach again.
+ * every visit except the spread on screen and relocks every protected route, so perks relock and
+ * chapters breach again.
  */
 export const useResetVisits = () => {
   const { pathname } = useLocation()
   const [, setLog] = useVisitStore()
+  const { relockAll } = useBreachGate()
   const [state, setState] = useState<ResetVisitsState>('idle')
 
   useEffect(() => {
@@ -87,8 +93,9 @@ export const useResetVisits = () => {
       return
     }
     setLog(withVisit(EMPTY, pathname))
+    relockAll()
     setState('cleared')
-  }, [state, pathname, setLog])
+  }, [state, pathname, setLog, relockAll])
 
   return { state, press }
 }

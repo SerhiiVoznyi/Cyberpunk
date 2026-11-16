@@ -18,6 +18,17 @@ Invariants of the reader, the sheet stack and the page turn. Breaking one of the
 - Any phase between `exiting` and `entering` must keep matching the exit animation selectors, or the outgoing page loses its `forwards` fill and snaps back to flat.
 - The overlay is decorative (`aria-hidden`, no live region of its own). Its timing derives from `--spread-breach` and the grid counts, so change `BREACH_MS` or the per-view `MATRIX` sizes rather than individual delays.
 
+## Protected routes
+
+- `PROTECTED_ROUTES` in `src/content/breach.ts` lists exact paths, `'/prefix/*'` rules (everything under the prefix, not the prefix itself) and `'/prefix/**'` rules (the prefix and everything under it). The Journal is locked with `'/blog/**'`, so one riddle guards `/blog`, every entry and read mode together; listing `'/blog'` and `'/blog/*'` separately would cost two solves. `/` is never protected: start-over lives there.
+- Article bodies render only in the article route (gated by the router) and read mode (redirected while locked). Titles and summaries still appear on the Map and in the drawer; a new surface that renders post HTML must sit behind the same gate.
+- The gate lives in the transition and the router, never in pages. `useSpreadTransition` holds a `displayedLocked` flag beside `displayed`, and `AppRouter({ location, locked })` renders `BreachPage` / `BreachMobile` in place of the routes while it is set. Every way in (map, links, typed URLs, prev/next) passes through that one check.
+- A change of lock state on the same path is a turn: solving the riddle turns it into the real page, and the page key (`pathname:locked`) remounts it and moves focus to its `h1`. No auto-breach overlay plays into a locked route or on the unlock turn.
+- Unlocks are stored per rule in `sv:breach` (`useBreachGate`), so one solve opens a whole rule. `useRecordVisit` skips locked paths, so perks light only after a real visit. Start-over relocks every rule.
+- Read mode sits outside the shell, so `/blog/:slug/read` redirects to the article (and its riddle) while locked.
+- Riddle state lives in `BreachGameProvider` above the sheet stack, because stacked sheets unmount their bodies. The riddle sheet stack sets `scrollDepth={false}` so the wheel never flips sheets mid-run.
+- This is a game gate, not access control: every route's content still ships to the client.
+
 ## Layers and geometry
 
 - A spread is `SheetScene` → optional `SheetStackProvider` → `Plate`s, ad-hoc `.layer` elements, and one `SheetStack` of `Sheet`s. Flat UI (such as `BackToMap`) goes in the scene's `overlay` prop.

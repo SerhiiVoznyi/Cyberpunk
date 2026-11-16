@@ -4,7 +4,7 @@ The site is a Cyberpunk 2077 artbook reader drawn as a comic: dark-first, hard-e
 
 ## Visual language
 
-- **Palette** — use tokens from `src/styles/variables.sass` only: void `--app-color-void`, signature yellow `--app-color-yellow`, HUD cyan `--app-color-cyan`, alert red `--app-color-red`, paper `--app-color-paper`, ink `--app-color-ink`. Give each hue one job: yellow for display type and primary emphasis, cyan for HUD chrome and focus, red for errors.
+- **Palette** — use tokens from `src/styles/variables.sass` only: void `--app-color-void`, signature yellow `--app-color-yellow`, HUD cyan `--app-color-cyan`, alert red `--app-color-red`, paper `--app-color-paper`, ink `--app-color-ink`. Give each hue one job: yellow for display type and primary emphasis, cyan for HUD chrome and focus, red for errors. Two narrow accents belong to the Breach riddle: ice blue `--app-color-ice` marks highlighted matrix codes, and green `--app-color-green` marks a granted breach.
 - **Type** — `--app-font-display` (Chakra Petch) for headings, labels and buttons, uppercase; `--app-font-mono` (Share Tech Mono) for HUD readouts and metadata via the `hud-label` mixin; `--app-font-body` (Source Sans 3) for reading text on sheets. Big spread titles use `DisplayTitle`, which applies the stencil cut.
 - **Shapes** — hard corners only (`defaultRadius: 0`). Use `notch-corner` / `notch-corner-right` for chopped corners, `hazard-stripe` for rules, `ink-edge` or drop-shadow offsets for lifted sheets. No rounded cards or soft gradient "glass" surfaces.
 - **Sheet treatments** — `paper` (bone stock, ink text), `ink` (dark HUD panel, cyan hairline), `yellow` (yellow stock, ink text). Edges: `clean`, `torn`, `notched`.

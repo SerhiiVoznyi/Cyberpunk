@@ -1,11 +1,17 @@
 import './site-map-list.sass'
 
 import { Link, useLocation } from 'react-router-dom'
+import { VisuallyHidden } from '@mantine/core'
 
 import { perkIconUrl, SITE_ROUTE, type SiteStop } from '@/content/site-map'
 import { entrySlugOf, findSpreadIndex, SPREADS } from '@/content/spreads'
 import { type CSSVars, cx } from '@/lib/cx'
-import { type ResetVisitsState, useResetVisits, useVisits } from '@/lib/reader'
+import {
+  type ResetVisitsState,
+  useBreachGate,
+  useResetVisits,
+  useVisits,
+} from '@/lib/reader'
 import { prefetchPost } from '@/services'
 
 import { RESET_VISITS_LABEL, ResetStatus } from '../reset-status/reset-status'
@@ -27,11 +33,11 @@ const prefetchFor = (stop: SiteStop) => () => {
   if (stop.kind === 'entry') prefetchPost(stop.id.slice('post:'.length))
 }
 
-const StopFace = ({ stop }: { stop: SiteStop }) => (
+const StopFace = ({ stop, iced = false }: { stop: SiteStop; iced?: boolean }) => (
   <>
     <span
       className="site-map-list__icon"
-      style={{ '--perk-icon': perkIconUrl(stop.icon) } as CSSVars}
+      style={{ '--perk-icon': perkIconUrl(iced ? 'locked' : stop.icon) } as CSSVars}
       aria-hidden="true"
     />
     <span
@@ -39,7 +45,10 @@ const StopFace = ({ stop }: { stop: SiteStop }) => (
       aria-hidden="true">
       {stop.number}
     </span>
-    <span className="site-map-list__label">{stop.spread.label}</span>
+    <span className="site-map-list__label">
+      {stop.spread.label}
+      {iced && <VisuallyHidden>, ICE protected</VisuallyHidden>}
+    </span>
   </>
 )
 
@@ -48,6 +57,7 @@ export const SiteMapList = () => {
   const { pathname } = useLocation()
   const { visited } = useVisits()
   const reset = useResetVisits()
+  const { isLocked } = useBreachGate()
   const current = currentStopId(pathname)
 
   return (
@@ -88,7 +98,10 @@ export const SiteMapList = () => {
                 data-visited={visited.has(stop.id) ? '' : undefined}
                 onFocus={prefetchFor(stop)}
                 onPointerEnter={prefetchFor(stop)}>
-                <StopFace stop={stop} />
+                <StopFace
+                  stop={stop}
+                  iced={isLocked(stop.spread.path)}
+                />
               </Link>
             )}
           </li>

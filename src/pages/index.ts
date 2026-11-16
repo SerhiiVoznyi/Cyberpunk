@@ -1,5 +1,7 @@
 export * from './article/article'
 export * from './article/article.mobile'
+export * from './breach/breach'
+export * from './breach/breach.mobile'
 export * from './contact/contact'
 export * from './contact/contact.mobile'
 export * from './experience/experience'

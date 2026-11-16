@@ -21,6 +21,7 @@ Stack: Vite, React 19, TypeScript, Mantine, React Router, indented Sass, and `ma
 - **Sheet stack** (`src/lib/sheet-stack/`) — `SheetScene` is the perspective and parallax root, `SheetStack` the positioned region, `Sheet` a promotable page and `Plate` a fixed art layer. All geometry is derived in CSS from a single `--layer-depth` value per layer.
 - **Spread registry** (`src/content/spreads.ts`) — the ordered list of spreads behind the counter, prev/next, the map and turn direction. Each blog post is added as its own spread automatically.
 - **Pages** (`src/pages/`) — Map (`/`), Profile, Experience, Journal (`/blog`), Article (`/blog/:slug`), Contact, and the Signal Lost 404.
+- **Protected routes** (`src/content/breach.ts`) — list a path, a `'/prefix/*'` rule (everything under it) or a `'/prefix/**'` rule (the path and everything under it; the Journal uses `'/blog/**'`) in `PROTECTED_ROUTES` and it shows a playable Breach Protocol riddle at its own URL until the reader solves it; Retry builds a fresh matrix. It is a game gate, not access control: the content still ships to the browser.
 
 Keyboard: arrow keys page between spreads, `M` mutes, `+` / `-` zoom, `Escape` resets zoom or returns to the map.
 

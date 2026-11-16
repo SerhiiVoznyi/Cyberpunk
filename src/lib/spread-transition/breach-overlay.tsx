@@ -4,9 +4,9 @@ import { useMemo } from 'react'
 
 import { findSpreadIndex, SPREADS } from '@/content/spreads'
 
+import { buildBreachCode } from '../breach'
 import type { CSSVars } from '../cx'
 import { useReader, type ViewMode } from '../reader'
-import { buildBreachCode } from './breach-code'
 
 // Single view is a narrow portrait stage and phones are narrower still, so each carries less.
 const MATRIX = {

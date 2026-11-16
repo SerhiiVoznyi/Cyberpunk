@@ -15,7 +15,7 @@ import { SpreadStage } from './spread-stage'
 import { TopBar } from './top-bar'
 
 type ReaderShellProps = {
-  renderSpread: (location: Location) => ReactNode
+  renderSpread: (location: Location, locked: boolean) => ReactNode
 }
 
 export const ReaderShell = ({ renderSpread }: ReaderShellProps) => {

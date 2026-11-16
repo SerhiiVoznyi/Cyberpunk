@@ -8,14 +8,25 @@ import { BreachOverlay } from './breach-overlay'
 import { useSpreadTransition } from './use-spread-transition'
 
 type SpreadTransitionProps = {
-  children: (location: Location) => ReactNode
+  /** `locked` is true while the location's protected route still shows the breach riddle. */
+  children: (location: Location, locked: boolean) => ReactNode
 }
 
 export const SpreadTransition = ({ children }: SpreadTransitionProps) => {
-  const { displayed, target, phase, direction, exitMs, breachMs, enterMs, skipBreach } =
-    useSpreadTransition()
+  const {
+    displayed,
+    displayedLocked,
+    target,
+    phase,
+    direction,
+    exitMs,
+    breachMs,
+    enterMs,
+    skipBreach,
+  } = useSpreadTransition()
   const ref = useRef<HTMLDivElement>(null)
   const isFirstRender = useRef(true)
+  const pageKey = `${displayed.pathname}:${displayedLocked ? 'locked' : 'open'}`
 
   useEffect(() => {
     if (isFirstRender.current) {
@@ -25,7 +36,7 @@ export const SpreadTransition = ({ children }: SpreadTransitionProps) => {
     ref.current
       ?.querySelector<HTMLElement>('[data-spread-heading]')
       ?.focus({ preventScroll: true })
-  }, [displayed.pathname])
+  }, [pageKey])
 
   return (
     <div
@@ -41,9 +52,9 @@ export const SpreadTransition = ({ children }: SpreadTransitionProps) => {
         } as CSSVars
       }>
       <div
-        key={displayed.pathname}
+        key={pageKey}
         className="spread-transition__page">
-        {children(displayed)}
+        {children(displayed, displayedLocked)}
       </div>
       <div
         className="spread-transition__burst"

@@ -69,3 +69,42 @@ export const buildBreachCode = (
 
   return { size, cells, path }
 }
+
+export type BreachDifficulty = {
+  size: number
+  sequence: number
+  buffer: number
+  /** Free picks before the sequence starts, so it rarely begins in the top row. */
+  lead: number
+  /** Extra copies of the sequence's codes scattered off the path, as false starts. */
+  decoys: number
+}
+
+export type BreachPuzzle = {
+  size: number
+  cells: string[]
+  /** The codes to land in the buffer, in order. */
+  sequence: string[]
+  buffer: number
+}
+
+/**
+ * A playable matrix. The sequence is planted along a legal path after `lead` free picks, so every
+ * puzzle can be solved within `lead + sequence` picks; decoys never touch that path.
+ */
+export const buildBreachPuzzle = (
+  seed: string,
+  { size, sequence, buffer, lead, decoys }: BreachDifficulty,
+): BreachPuzzle => {
+  const { cells, path } = buildBreachCode(seed, size, lead + sequence)
+  const codes = path.slice(lead).map((cell) => cells[cell])
+
+  const random = mulberry32(hashSeed(`${seed}:decoys`))
+  const open = cells.map((_, cell) => cell).filter((cell) => !path.includes(cell))
+  for (let k = 0; k < decoys && open.length > 0; k++) {
+    const [cell] = open.splice(Math.floor(random() * open.length), 1)
+    cells[cell] = codes[Math.floor(random() * codes.length)]
+  }
+
+  return { size, cells, sequence: codes, buffer }
+}

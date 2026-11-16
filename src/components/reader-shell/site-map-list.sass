@@ -42,6 +42,35 @@
     body[data-fx='reduced'] &
         transition: none
 
+// The Map's own entry while on the Map: it reads as the current stop and arms a start-over.
+.site-map-list__link--reset
+    width: 100%
+    border: 0
+    border-left: 2px solid var(--app-color-yellow)
+    color: var(--app-color-ink)
+    background: var(--app-color-yellow)
+    text-align: left
+    cursor: pointer
+
+    &:hover,
+    &:focus-visible
+        color: var(--app-color-ink)
+        background: var(--app-color-yellow)
+        border-left-color: var(--app-color-cyan)
+
+    &[data-reset='armed'],
+    &[data-reset='armed']:hover,
+    &[data-reset='armed']:focus-visible
+        color: var(--app-color-ink)
+        background: var(--app-color-red)
+        border-left-color: var(--app-color-red)
+
+.site-map-list__action
+    flex-shrink: 0
+    margin-left: auto
+    @include hud-label
+    font-size: 0.68rem
+
 .site-map-list__icon
     flex-shrink: 0
     width: 1.5rem

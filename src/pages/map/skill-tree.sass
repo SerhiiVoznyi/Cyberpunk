@@ -106,6 +106,14 @@
     &::after
         left: calc(100% + var(--u) * 1)
 
+// The root perk starts over rather than navigating, so it is a button dressed as a link tile.
+button.skill-tree__tile
+    padding: 0
+    text-align: start
+    border: 0
+    background: none
+    cursor: pointer
+
 .skill-tree__face
     --face-fill: var(--app-color-tree-locked)
     --face-line: var(--app-color-cyan-dim)
@@ -282,12 +290,51 @@
     text-transform: none
     white-space: normal
 
+.skill-tree__tip-action
+    margin-top: 0.2em
+    padding-top: 0.4em
+    border-top: 1px solid var(--app-color-void-line)
+    color: var(--app-color-yellow)
+
+// Armed start-over: the root turns alert red and holds its tip open until the second press.
+.skill-tree__perk--unlocked.skill-tree__perk--armed
+    filter: drop-shadow(0 0 calc(var(--u) * 9) rgba(255, 0, 60, 0.6))
+
+    .skill-tree__face
+        --face-fill: var(--app-color-red)
+        --face-line: rgba(10, 10, 11, 0.6)
+        --face-ink: var(--app-color-ink)
+        animation: skill-tree-armed 900ms steps(2) infinite
+
+    .skill-tree__name
+        color: var(--app-color-red)
+
+    .skill-tree__tip
+        border-left-color: var(--app-color-red)
+
+    .skill-tree__tip-action
+        color: var(--app-color-red)
+
+.skill-tree__perk--armed,
+.skill-tree__perk--cleared
+    .skill-tree__tip
+        opacity: 1
+        translate: 0 0
+
+.skill-tree__perk--cleared .skill-tree__tip-action
+    color: var(--app-color-cyan)
+
 @keyframes skill-tree-flow
     to
         stroke-dashoffset: -24
 
+@keyframes skill-tree-armed
+    50%
+        filter: brightness(0.72)
+
 body[data-fx='reduced'] .skill-tree
-    .skill-tree__strand
+    .skill-tree__strand,
+    .skill-tree__perk--armed .skill-tree__face
         animation: none
 
     .skill-tree__perk
@@ -295,7 +342,8 @@ body[data-fx='reduced'] .skill-tree
 
 @media (prefers-reduced-motion: reduce)
     .skill-tree
-        .skill-tree__strand
+        .skill-tree__strand,
+        .skill-tree__perk--armed .skill-tree__face
             animation: none
 
         .skill-tree__tip,

@@ -3,9 +3,10 @@ import './skill-tree.sass'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { RESET_VISITS_LABEL, ResetStatus } from '@/components'
 import { CHAPTERS } from '@/content/spreads'
 import { type CSSVars, cx } from '@/lib/cx'
-import { useVisits } from '@/lib/reader'
+import { type ResetVisitsState, useResetVisits, useVisits } from '@/lib/reader'
 import { useSheetStack } from '@/lib/sheet-stack'
 import { formatCompactCount, getJournalManifest, prefetchPost } from '@/services'
 
@@ -63,6 +64,14 @@ const TIP_KIND: Record<MapStop['kind'], string> = {
   entry: 'Entry',
   archive: 'Archive',
 }
+
+const RESET_HINT: Record<ResetVisitsState, string> = {
+  idle: 'Press to start over',
+  armed: 'Press again to clear progress',
+  cleared: 'Progress cleared',
+}
+
+type Reset = ReturnType<typeof useResetVisits>
 
 const PerkArt = ({ icon }: { icon: PerkIcon }) => (
   <span
@@ -140,6 +149,7 @@ const Circuit = ({
 const Perk = ({
   stop,
   visits,
+  reset,
   active,
   linked,
   onAim,
@@ -147,6 +157,8 @@ const Perk = ({
 }: {
   stop: MapStop
   visits: Visits
+  /** The root perk is where the reader already is, so it starts over instead of navigating. */
+  reset?: Reset
   active: boolean
   linked: boolean
   onAim: () => void
@@ -157,6 +169,64 @@ const Perk = ({
   const unlocked =
     here || visits.visited.has(stop.id) || (stop.kind === 'archive' && level.points > 0)
   const position = toPercent(stop)
+  const aimHandlers = {
+    onPointerEnter: onAim,
+    onPointerLeave: onRelease,
+    onFocus: onAim,
+    onBlur: onRelease,
+  }
+
+  const content = (
+    <>
+      <span
+        className="skill-tree__readout"
+        aria-hidden="true">
+        <span className="skill-tree__code">{stop.code}</span>
+        <span
+          className={cx(
+            'skill-tree__level',
+            level.points === 0 && 'skill-tree__level--empty',
+            level.points === level.max && 'skill-tree__level--full',
+          )}>
+          {formatCompactCount(level.points)}/{formatCompactCount(level.max)}
+        </span>
+      </span>
+      <span
+        className="skill-tree__face"
+        aria-hidden="true">
+        <PerkArt icon={stop.icon} />
+      </span>
+      <span className="skill-tree__name">{stop.spread.label}</span>
+      <span className="skill-tree__tip">
+        <span
+          className="skill-tree__tip-head"
+          aria-hidden="true">
+          <span className="skill-tree__tip-index">{stop.number}</span>
+          {`${TIP_KIND[stop.kind]} // ${stop.code}`}
+        </span>
+        {stop.kind === 'entry' && (
+          <span
+            className="skill-tree__tip-title"
+            aria-hidden="true">
+            {stop.spread.label}
+          </span>
+        )}
+        <span className="skill-tree__tip-place">{stop.place}</span>
+        <span
+          className="skill-tree__tip-teaser"
+          aria-hidden="true">
+          {stop.spread.teaser}
+        </span>
+        {reset && (
+          <span
+            className="skill-tree__tip-action"
+            aria-hidden="true">
+            {RESET_HINT[reset.state]}
+          </span>
+        )}
+      </span>
+    </>
+  )
 
   return (
     <li
@@ -167,57 +237,30 @@ const Perk = ({
         unlocked ? 'skill-tree__perk--unlocked' : 'skill-tree__perk--available',
         active && 'skill-tree__perk--active',
         linked && 'skill-tree__perk--linked',
+        reset && reset.state !== 'idle' && `skill-tree__perk--${reset.state}`,
       )}
       style={{ '--perk-x': position.x, '--perk-y': position.y } as CSSVars}>
-      <Link
-        to={stop.spread.path}
-        className="skill-tree__tile"
-        aria-current={here ? 'page' : undefined}
-        onPointerEnter={onAim}
-        onPointerLeave={onRelease}
-        onFocus={onAim}
-        onBlur={onRelease}>
-        <span
-          className="skill-tree__readout"
-          aria-hidden="true">
-          <span className="skill-tree__code">{stop.code}</span>
-          <span
-            className={cx(
-              'skill-tree__level',
-              level.points === 0 && 'skill-tree__level--empty',
-              level.points === level.max && 'skill-tree__level--full',
-            )}>
-            {formatCompactCount(level.points)}/{formatCompactCount(level.max)}
-          </span>
-        </span>
-        <span
-          className="skill-tree__face"
-          aria-hidden="true">
-          <PerkArt icon={stop.icon} />
-        </span>
-        <span className="skill-tree__name">{stop.spread.label}</span>
-        <span className="skill-tree__tip">
-          <span
-            className="skill-tree__tip-head"
-            aria-hidden="true">
-            <span className="skill-tree__tip-index">{stop.number}</span>
-            {`${TIP_KIND[stop.kind]} // ${stop.code}`}
-          </span>
-          {stop.kind === 'entry' && (
-            <span
-              className="skill-tree__tip-title"
-              aria-hidden="true">
-              {stop.spread.label}
-            </span>
-          )}
-          <span className="skill-tree__tip-place">{stop.place}</span>
-          <span
-            className="skill-tree__tip-teaser"
-            aria-hidden="true">
-            {stop.spread.teaser}
-          </span>
-        </span>
-      </Link>
+      {reset ? (
+        <>
+          <button
+            type="button"
+            className="skill-tree__tile"
+            aria-label={RESET_VISITS_LABEL}
+            onClick={reset.press}
+            {...aimHandlers}>
+            {content}
+          </button>
+          <ResetStatus state={reset.state} />
+        </>
+      ) : (
+        <Link
+          to={stop.spread.path}
+          className="skill-tree__tile"
+          aria-current={here ? 'page' : undefined}
+          {...aimHandlers}>
+          {content}
+        </Link>
+      )}
     </li>
   )
 }
@@ -226,6 +269,7 @@ const Perk = ({
 export const SkillTree = () => {
   const { order, promote } = useSheetStack()
   const visits = useVisits()
+  const reset = useResetVisits()
   const [aimed, setAimed] = useState<string | null>(null)
   const linked = aimed ? neighbours(aimed) : new Set<string>()
 
@@ -274,6 +318,7 @@ export const SkillTree = () => {
             key={stop.id}
             stop={stop}
             visits={visits}
+            reset={stop.kind === 'root' ? reset : undefined}
             active={order[0] === stop.id}
             linked={linked.has(stop.id)}
             onAim={() => aim(stop)}

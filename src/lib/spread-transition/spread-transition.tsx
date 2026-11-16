@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useRef } from 'react'
 import type { Location } from 'react-router-dom'
 
 import type { CSSVars } from '../cx'
+import { BreachOverlay } from './breach-overlay'
 import { useSpreadTransition } from './use-spread-transition'
 
 type SpreadTransitionProps = {
@@ -11,7 +12,8 @@ type SpreadTransitionProps = {
 }
 
 export const SpreadTransition = ({ children }: SpreadTransitionProps) => {
-  const { displayed, phase, direction, exitMs, enterMs } = useSpreadTransition()
+  const { displayed, target, phase, direction, exitMs, breachMs, enterMs, skipBreach } =
+    useSpreadTransition()
   const ref = useRef<HTMLDivElement>(null)
   const isFirstRender = useRef(true)
 
@@ -34,6 +36,7 @@ export const SpreadTransition = ({ children }: SpreadTransitionProps) => {
       style={
         {
           '--spread-turn-exit': `${exitMs}ms`,
+          '--spread-breach': `${breachMs}ms`,
           '--spread-turn-enter': `${enterMs}ms`,
         } as CSSVars
       }>
@@ -46,6 +49,12 @@ export const SpreadTransition = ({ children }: SpreadTransitionProps) => {
         className="spread-transition__burst"
         aria-hidden="true"
       />
+      {phase === 'breaching' && (
+        <BreachOverlay
+          target={target}
+          onSkip={skipBreach}
+        />
+      )}
     </div>
   )
 }

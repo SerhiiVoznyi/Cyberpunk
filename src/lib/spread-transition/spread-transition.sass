@@ -11,12 +11,15 @@
     .spread-transition[data-direction='backward'] &
         transform-origin: 100% 50%
 
-    .spread-transition[data-phase='exiting'] &
+    // The breach keeps matching so the turned page holds its end frame instead of snapping back.
+    .spread-transition[data-phase='exiting'] &,
+    .spread-transition[data-phase='breaching'] &
         animation: spread-turn-forward var(--spread-turn-exit) var(--spread-turn-ease) forwards
         will-change: transform, opacity
         pointer-events: none
 
-    .spread-transition[data-phase='exiting'][data-direction='backward'] &
+    .spread-transition[data-phase='exiting'][data-direction='backward'] &,
+    .spread-transition[data-phase='breaching'][data-direction='backward'] &
         animation-name: spread-turn-backward
 
 // Entering: the new spread's layers settle forward from the back of the stack, farthest first.

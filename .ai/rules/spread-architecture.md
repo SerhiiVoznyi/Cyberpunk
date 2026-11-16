@@ -9,6 +9,15 @@ Invariants of the reader, the sheet stack and the page turn. Breaking one of the
 - Routes live in `src/router.tsx` and render with the `location` passed in by `SpreadTransition`, never the live router location, so the outgoing spread can finish turning.
 - Each route element is remounted per pathname by the transition; do not rely on page state surviving navigation.
 
+## Page turn
+
+- The turn runs `exiting` → `breaching` (optional) → `entering` → `idle` in `use-spread-transition.ts`. Zoom resets at the end of `exiting`; the location swaps in at the start of `entering`. Do not add a second transition component: the swap, the remount, the zoom reset and the heading focus must happen in one place.
+- `breaching` plays the Breach Protocol overlay only on the first visit to a chapter, never for journal entries (each is a first visit, and there may be thousands). The decision is made in the render that starts the turn, before `useRecordVisit` records the new path, and is kept in state for the whole turn.
+- On the Map, the root perk (and on phones the drawer's Map entry) is a two-press "start over" button built on `useResetVisits`: the first press arms it for four seconds, the second clears the visit log except the Map, so perks relock and every chapter breaches again. Elsewhere that entry stays a link to the Map.
+- The breach never mounts under `prefers-reduced-motion: reduce` or `body[data-fx='reduced']`. A tap on it, or Escape, Enter or Space, skips it; the key listener runs in the capture phase so Escape does not also reach the reader's back-to-map hotkey.
+- Any phase between `exiting` and `entering` must keep matching the exit animation selectors, or the outgoing page loses its `forwards` fill and snaps back to flat.
+- The overlay is decorative (`aria-hidden`, no live region of its own). Its timing derives from `--spread-breach` and the grid counts, so change `BREACH_MS` or the per-view `MATRIX` sizes rather than individual delays.
+
 ## Layers and geometry
 
 - A spread is `SheetScene` → optional `SheetStackProvider` → `Plate`s, ad-hoc `.layer` elements, and one `SheetStack` of `Sheet`s. Flat UI (such as `BackToMap`) goes in the scene's `overlay` prop.

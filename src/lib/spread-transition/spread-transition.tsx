@@ -63,6 +63,7 @@ export const SpreadTransition = ({ children }: SpreadTransitionProps) => {
       {phase === 'breaching' && (
         <BreachOverlay
           target={target}
+          breachMs={breachMs}
           onSkip={skipBreach}
         />
       )}

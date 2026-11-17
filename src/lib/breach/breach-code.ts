@@ -86,18 +86,30 @@ export type BreachPuzzle = {
   /** The codes to land in the buffer, in order. */
   sequence: string[]
   buffer: number
+  /** The planted solution, lead picks included. */
+  path: number[]
 }
 
 /**
  * A playable matrix. The sequence is planted along a legal path after `lead` free picks, so every
- * puzzle can be solved within `lead + sequence` picks; decoys never touch that path.
+ * puzzle can be solved within `lead + sequence` picks; decoys never touch that path. Adjacent
+ * sequence codes always differ, since a repeated code takes no buffer slot.
  */
 export const buildBreachPuzzle = (
   seed: string,
   { size, sequence, buffer, lead, decoys }: BreachDifficulty,
 ): BreachPuzzle => {
   const { cells, path } = buildBreachCode(seed, size, lead + sequence)
-  const codes = path.slice(lead).map((cell) => cells[cell])
+  const planted = path.slice(lead)
+
+  const reroll = mulberry32(hashSeed(`${seed}:sequence`))
+  for (let k = 1; k < planted.length; k++) {
+    const previous = cells[planted[k - 1]]
+    if (cells[planted[k]] !== previous) continue
+    const others = HEX.filter((code) => code !== previous)
+    cells[planted[k]] = others[Math.floor(reroll() * others.length)]
+  }
+  const codes = planted.map((cell) => cells[cell])
 
   const random = mulberry32(hashSeed(`${seed}:decoys`))
   const open = cells.map((_, cell) => cell).filter((cell) => !path.includes(cell))
@@ -106,5 +118,5 @@ export const buildBreachPuzzle = (
     cells[cell] = codes[Math.floor(random() * codes.length)]
   }
 
-  return { size, cells, sequence: codes, buffer }
+  return { size, cells, sequence: codes, buffer, path }
 }

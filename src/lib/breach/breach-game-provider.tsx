@@ -1,9 +1,10 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 
-import { BREACH_TIME_MS } from '@/content/breach'
+import { BREACH_GAME } from '@/content/breach-game'
 
-import { useReader, type ViewMode } from '../reader'
-import { type BreachDifficulty, buildBreachPuzzle } from './breach-code'
+import { useReader } from '../reader'
+import { buildBreachPuzzle } from './breach-code'
+import { resolveBreachSettings } from './breach-config'
 import {
   BreachGameContext,
   type BreachGameValue,
@@ -11,23 +12,12 @@ import {
 } from './breach-game-context'
 import {
   BREACH_START,
+  bufferCodes,
   hasPickable,
   hasSequence,
   isPickable,
   nextCursor,
 } from './breach-rules'
-
-// One spare pick in the buffer, and the sequence starts after a lead-in pick, so the opener must
-// be planned. Phone cells must stay touch-sized, so the phone grid is a size smaller.
-const DIFFICULTY: Record<ViewMode, BreachDifficulty> = {
-  spread: { size: 7, sequence: 5, buffer: 6, lead: 1, decoys: 8 },
-  single: { size: 7, sequence: 5, buffer: 6, lead: 1, decoys: 8 },
-  phone: { size: 6, sequence: 4, buffer: 5, lead: 1, decoys: 6 },
-}
-
-const HURRY_MS = 5_000
-/** How long ACCESS GRANTED holds before the real page turns in. */
-const SOLVED_HOLD_MS = 1100
 
 type Run = Pick<BreachGameValue, 'picked' | 'cursor' | 'failure' | 'hurry'> & {
   phase: BreachPhase
@@ -55,7 +45,10 @@ export const BreachGameProvider = ({
 }: BreachGameProviderProps) => {
   const { viewMode } = useReader()
   // Fixed for the life of the screen: a rotation mid-run must not swap the grid under the reader.
-  const [difficulty] = useState(() => DIFFICULTY[viewMode])
+  const [settings] = useState(() =>
+    resolveBreachSettings(viewMode === 'phone' ? BREACH_GAME.phone : BREACH_GAME.desktop),
+  )
+  const { difficulty, timeMs, hurryMs, solvedHoldMs } = settings
   const [attempt, setAttempt] = useState(0)
   const [nonce, setNonce] = useState(() => Date.now())
   const [run, setRun] = useState<Run>(FRESH_RUN)
@@ -65,6 +58,7 @@ export const BreachGameProvider = ({
     [seed, attempt, nonce, difficulty],
   )
   const { size } = puzzle
+  const codes = useMemo(() => bufferCodes(puzzle.cells, run.picked), [puzzle, run.picked])
 
   const canPick = useCallback(
     (cell: number) =>
@@ -80,11 +74,11 @@ export const BreachGameProvider = ({
         if (!isPickable(size, current.cursor, current.picked, cell)) return current
         const picked = [...current.picked, cell]
         const cursor = nextCursor(size, current.cursor, cell)
-        const codes = picked.map((index) => puzzle.cells[index])
-        if (hasSequence(codes, puzzle.sequence)) {
+        const buffered = bufferCodes(puzzle.cells, picked)
+        if (hasSequence(buffered, puzzle.sequence)) {
           return { ...current, picked, cursor, phase: 'solved' }
         }
-        if (picked.length >= puzzle.buffer || !hasPickable(size, cursor, picked)) {
+        if (buffered.length >= puzzle.buffer || !hasPickable(size, cursor, picked)) {
           return { ...current, picked, cursor, phase: 'failed', failure: 'buffer' }
         }
         return { ...current, picked, cursor, phase: 'running' }
@@ -102,7 +96,7 @@ export const BreachGameProvider = ({
     if (run.phase === 'running') {
       const hurry = window.setTimeout(
         () => setRun((current) => ({ ...current, hurry: true })),
-        BREACH_TIME_MS - HURRY_MS,
+        timeMs - hurryMs,
       )
       const expire = window.setTimeout(
         () =>
@@ -111,7 +105,7 @@ export const BreachGameProvider = ({
               ? { ...current, phase: 'failed', failure: 'timeout' }
               : current,
           ),
-        BREACH_TIME_MS,
+        timeMs,
       )
       return () => {
         window.clearTimeout(hurry)
@@ -119,23 +113,24 @@ export const BreachGameProvider = ({
       }
     }
     if (run.phase === 'solved') {
-      const timer = window.setTimeout(onSolved, SOLVED_HOLD_MS)
+      const timer = window.setTimeout(onSolved, solvedHoldMs)
       return () => window.clearTimeout(timer)
     }
-  }, [run.phase, onSolved])
+  }, [run.phase, onSolved, timeMs, hurryMs, solvedHoldMs])
 
   const value = useMemo<BreachGameValue>(
     () => ({
       puzzle,
       ...run,
+      codes,
       attempt,
-      timeMs: BREACH_TIME_MS,
-      hurryMs: HURRY_MS,
+      timeMs,
+      hurryMs,
       canPick,
       pick,
       retry,
     }),
-    [puzzle, run, attempt, canPick, pick, retry],
+    [puzzle, run, codes, attempt, timeMs, hurryMs, canPick, pick, retry],
   )
 
   return <BreachGameContext value={value}>{children}</BreachGameContext>

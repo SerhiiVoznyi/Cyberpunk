@@ -25,6 +25,10 @@ export const nextCursor = (
     ? { axis: 'col', line: colOf(size, cell) }
     : { axis: 'row', line: rowOf(size, cell) }
 
+/** The cursor after a run of picks, from the opening row. */
+export const cursorAfter = (size: number, picked: readonly number[]) =>
+  picked.reduce((cursor, cell) => nextCursor(size, cursor, cell), BREACH_START)
+
 export const hasPickable = (
   size: number,
   cursor: BreachCursor,
@@ -34,6 +38,22 @@ export const hasPickable = (
     isPickable(size, cursor, picked, cell),
   )
 
+/** A pick whose code repeats the previous buffer code uses its cell but takes no slot. */
+export const bufferCodes = (cells: readonly string[], picked: readonly number[]) =>
+  picked.reduce<string[]>((codes, cell) => {
+    const code = cells[cell]
+    return codes.at(-1) === code ? codes : [...codes, code]
+  }, [])
+
 /** The sequence must appear in the buffer as one unbroken run. */
 export const hasSequence = (codes: readonly string[], sequence: readonly string[]) =>
   codes.some((_, start) => sequence.every((code, k) => codes[start + k] === code))
+
+/** How many codes at the end of the buffer already begin the sequence. */
+export const matchedCount = (codes: readonly string[], sequence: readonly string[]) => {
+  for (let k = Math.min(codes.length, sequence.length); k > 0; k--) {
+    const tail = codes.slice(codes.length - k)
+    if (tail.every((code, index) => code === sequence[index])) return k
+  }
+  return 0
+}

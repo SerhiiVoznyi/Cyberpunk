@@ -9,8 +9,10 @@ export type BreachFailure = 'timeout' | 'buffer'
 export type BreachGameValue = {
   puzzle: BreachPuzzle
   phase: BreachPhase
-  /** Picked cells in order; their codes fill the buffer. */
+  /** Picked cells in order. */
   picked: number[]
+  /** The buffer: picked codes, minus picks that repeat the code before them. */
+  codes: string[]
   cursor: BreachCursor
   failure: BreachFailure | null
   /** Set once `hurryMs` or less remain. */

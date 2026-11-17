@@ -10,9 +10,6 @@
  */
 export const PROTECTED_ROUTES: readonly string[] = ['/contact', '/blog/**']
 
-/** Time to land the sequence once the first code is picked. */
-export const BREACH_TIME_MS = 15_000
-
 const normalize = (pathname: string) =>
   pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
 

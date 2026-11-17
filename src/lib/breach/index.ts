@@ -1,4 +1,6 @@
+export * from './breach-board'
 export * from './breach-code'
+export * from './breach-config'
 export * from './breach-game-context'
 export * from './breach-game-provider'
 export * from './breach-rules'

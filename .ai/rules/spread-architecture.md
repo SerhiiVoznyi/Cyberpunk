@@ -16,7 +16,7 @@ Invariants of the reader, the sheet stack and the page turn. Breaking one of the
 - On the Map, the root perk (and on phones the drawer's Map entry) is a two-press "start over" button built on `useResetVisits`: the first press arms it for four seconds, the second clears the visit log except the Map, so perks relock and every chapter breaches again. Elsewhere that entry stays a link to the Map.
 - The breach never mounts under `prefers-reduced-motion: reduce` or `body[data-fx='reduced']`. A tap on it, or Escape, Enter or Space, skips it; the key listener runs in the capture phase so Escape does not also reach the reader's back-to-map hotkey.
 - Any phase between `exiting` and `entering` must keep matching the exit animation selectors, or the outgoing page loses its `forwards` fill and snaps back to flat.
-- The overlay is decorative (`aria-hidden`, no live region of its own). Its timing derives from `--spread-breach` and the grid counts, so change `BREACH_MS` or the per-view `MATRIX` sizes rather than individual delays.
+- The overlay is decorative (`aria-hidden`, no live region of its own). It renders the riddle's `BreachBoard` without controls (spans, not buttons, inside an `inert` wrapper) from the same `BREACH_GAME` preset as the game, and replays the puzzle's planted `path` with picks spread across `BREACH_MS`. Change `BREACH_MS` or the preset rather than individual delays.
 
 ## Protected routes
 

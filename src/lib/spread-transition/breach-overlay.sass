@@ -1,12 +1,8 @@
 @use '../../styles/mixins' as *
 
-// The breach between the two halves of a first-visit turn. Timing derives from the turn's
-// --spread-breach and the counts set inline, so every grid size fills its window.
+// The breach between the two halves of a first-visit turn: the riddle board (styled by
+// src/lib/breach/breach-board.sass) replaying its solution inside a console frame.
 .breach-overlay
-    --breach-fill: calc(var(--breach-cells) * 5ms)
-    --breach-step: calc((var(--spread-breach) * 0.72 - var(--breach-fill)) / var(--breach-steps))
-    --breach-gap: 0.5cqw
-    --breach-cell-type: clamp(0.6rem, 1.9cqw, 0.9rem)
     position: absolute
     inset: 0
     z-index: 3
@@ -21,54 +17,35 @@
     animation: breach-in 160ms steps(2) both
     will-change: opacity
 
-    &[data-view='spread']
-        --breach-gap: 0.45cqh
-        --breach-cell-type: clamp(0.6rem, 2.6cqh, 1.05rem)
-        padding: 2cqh 3cqw
-
     &[data-view='phone']
-        --breach-cell-type: clamp(0.7rem, 3.4cqw, 1.05rem)
         padding: 4cqh 4cqw
 
 .breach-overlay__console
     display: grid
-    grid-template-columns: minmax(0, auto)
-    grid-template-areas: 'header' 'buffer' 'matrix' 'timer' 'stamp'
-    justify-items: center
-    gap: 2cqh
-    max-width: 100%
+    gap: 1.2rem
+    width: min(46rem, 100%)
     max-height: 100%
-    padding: 3cqh 3cqw
+    padding: 1.4rem 1.6rem
     border: 1px solid var(--app-color-cyan-dim)
     background: var(--app-color-void)
     @include notch-corner(16px)
 
-    .breach-overlay[data-view='spread'] &
-        grid-template-columns: 26cqw auto
-        grid-template-rows: 1fr repeat(4, auto) 1fr
-        grid-template-areas: '. matrix' 'header matrix' 'buffer matrix' 'timer matrix' 'stamp matrix' '. matrix'
-        justify-items: start
-        column-gap: 3cqw
-        row-gap: 2.5cqh
-        padding: 3cqh 3cqw
-
     .breach-overlay[data-view='phone'] &
-        gap: 2.5cqh
-        padding: 4cqw
+        gap: 1rem
+        padding: 1.1rem
 
 .breach-overlay__header
-    grid-area: header
-    display: grid
-    gap: 0.35rem
-    justify-items: inherit
-    text-align: center
-
-    .breach-overlay[data-view='spread'] &
-        text-align: left
+    display: flex
+    flex-wrap: wrap
+    align-items: baseline
+    justify-content: space-between
+    gap: 0.35rem 1rem
+    padding-bottom: 0.7rem
+    border-bottom: 1px solid var(--app-color-void-line)
 
 .breach-overlay__title
     font-family: var(--app-font-display)
-    font-size: clamp(1rem, 2.4cqw, 1.6rem)
+    font-size: clamp(1rem, 2.4cqw, 1.5rem)
     font-weight: 700
     line-height: 1
     text-transform: uppercase
@@ -76,11 +53,8 @@
     color: var(--app-color-yellow)
     @include rgb-split(2px)
 
-    .breach-overlay[data-view='spread'] &
-        font-size: clamp(1rem, 4.4cqh, 1.8rem)
-
     .breach-overlay[data-view='phone'] &
-        font-size: clamp(1.1rem, 6cqw, 1.5rem)
+        font-size: clamp(1.1rem, 6cqw, 1.4rem)
 
 .breach-overlay__target
     @include hud-label
@@ -90,156 +64,46 @@
         font-weight: 400
         color: var(--app-color-cyan)
 
-.breach-overlay__buffer
-    grid-area: buffer
-    display: flex
-    flex-wrap: wrap
-    justify-content: center
-    gap: 0.35rem
+// The board's sheet sizes assume a sheet; here the stage bounds the matrix instead.
+.breach-overlay__board
+    .breach-game
+        min-height: 0
 
-    .breach-overlay[data-view='spread'] &
-        justify-content: start
+    .breach-game__matrix
+        max-width: min(24rem, 56cqh)
 
-.breach-overlay__slot
-    display: grid
-    place-items: center
-    min-width: 2.4em
-    padding: 0.25em 0.3em
-    font-family: var(--app-font-mono)
-    font-size: var(--breach-cell-type)
-    line-height: 1
-    color: transparent
-    border: 1px dashed var(--app-color-cyan-dim)
-    animation: breach-slot-fill 90ms steps(1) both
-    animation-delay: calc(var(--breach-fill) + (var(--step) + 0.6) * var(--breach-step))
+    .breach-overlay[data-view='single'] &
+        .breach-game
+            grid-template-columns: minmax(0, 1fr)
 
-// Two grids share one cell: the scan bands underneath, the codes on top.
-.breach-overlay__matrix
-    grid-area: matrix
-    display: grid
-    aspect-ratio: 1
-    width: min(70cqw, 52cqh)
+        .breach-game__matrix
+            max-width: min(24rem, 40cqh)
 
-    .breach-overlay[data-view='spread'] &
-        width: auto
-        height: min(86cqh, 36cqw)
+        .breach-game__cell
+            font-size: clamp(0.78rem, 2cqw, 1.05rem)
 
     .breach-overlay[data-view='phone'] &
-        width: min(84cqw, 48cqh)
+        .breach-game
+            grid-template-columns: minmax(0, 1fr)
+            gap: 0.9rem
 
-.breach-overlay__scans,
-.breach-overlay__cells
-    grid-area: 1 / 1
-    display: grid
-    grid-template-columns: repeat(var(--breach-size), minmax(0, 1fr))
-    grid-template-rows: repeat(var(--breach-size), minmax(0, 1fr))
-    gap: var(--breach-gap)
+        .breach-game__matrix
+            max-width: min(100%, 44cqh)
 
-.breach-overlay__scan
-    background: var(--app-color-cyan-ghost)
-    outline: 1px solid var(--app-color-cyan-dim)
-    opacity: 0
-    animation: breach-scan var(--breach-step) linear both
-    animation-delay: calc(var(--breach-fill) + var(--step) * var(--breach-step))
+        .breach-game__cell
+            font-size: 1rem
 
-.breach-overlay__cell
-    display: grid
-    place-items: center
-    font-family: var(--app-font-mono)
-    font-size: var(--breach-cell-type)
-    line-height: 1
-    color: var(--app-color-cyan)
-    animation: breach-cell-in 140ms ease-out both
-    animation-delay: calc(var(--cell-index) * 5ms)
+        .breach-game__panel
+            gap: 0.7rem
 
-    &[data-solved]
-        animation: breach-cell-in 140ms ease-out both, breach-cell-lock 160ms steps(2) forwards
-        animation-delay: calc(var(--cell-index) * 5ms), calc(var(--breach-fill) + (var(--step) + 0.6) * var(--breach-step))
-
-.breach-overlay__timer
-    grid-area: timer
-    justify-self: stretch
-    display: grid
-    gap: 0.3rem
-
-.breach-overlay__timer-label
-    @include hud-label
-    font-size: var(--app-text-small)
-    color: var(--app-text-color-muted)
-
-.breach-overlay__timer-track
-    display: block
-    height: 4px
-    background: var(--app-color-void-line)
-
-.breach-overlay__timer-bar
-    display: block
-    height: 100%
-    background: var(--app-color-red)
-    transform-origin: 0 50%
-    animation: breach-timer var(--spread-breach) linear both
-    will-change: transform
-
-.breach-overlay__stamp
-    grid-area: stamp
-    padding: 0.4rem 0.8rem
-    font-family: var(--app-font-display)
-    font-size: clamp(0.75rem, 1.6cqw, 1.05rem)
-    font-weight: 700
-    text-transform: uppercase
-    letter-spacing: 0.08em
-    color: var(--app-color-ink)
-    background: var(--app-color-yellow)
-    @include notch-corner-right(8px)
-    animation: breach-stamp 200ms steps(3) both
-    animation-delay: calc(var(--spread-breach) * 0.78)
-
-    .breach-overlay[data-view='spread'] &
-        font-size: clamp(0.75rem, 2.8cqh, 1.05rem)
-
-    .breach-overlay[data-view='phone'] &
-        font-size: clamp(0.75rem, 3.6cqw, 1rem)
+        .breach-game__status
+            min-height: 0
 
 @keyframes breach-in
     from
         opacity: 0
 
-@keyframes breach-cell-in
-    from
-        opacity: 0
-        transform: translateY(-40%)
-
-@keyframes breach-cell-lock
-    to
-        color: var(--app-color-ink)
-        background: var(--app-color-yellow)
-
-@keyframes breach-slot-fill
-    to
-        color: var(--app-color-ink)
-        background: var(--app-color-yellow)
-        border-color: var(--app-color-yellow)
-        border-style: solid
-
-@keyframes breach-scan
-    0%, 100%
-        opacity: 0
-    15%, 70%
-        opacity: 1
-
-@keyframes breach-timer
-    from
-        transform: scaleX(1)
-    to
-        transform: scaleX(0)
-
-@keyframes breach-stamp
-    from
-        opacity: 0
-        transform: scale(1.35)
-
 // The turn never mounts the breach under reduced motion or reduced FX; this is a backstop.
 @media (prefers-reduced-motion: reduce)
-    .breach-overlay,
-    .breach-overlay [class]
+    .breach-overlay
         animation: none

@@ -37,3 +37,22 @@ export const TagChip = ({
     </button>
   )
 }
+
+/** A static row of chips. */
+export const TagChips = ({
+  items,
+  label,
+}: {
+  items: readonly string[]
+  label?: string
+}) => (
+  <ul
+    className="chip-row"
+    aria-label={label}>
+    {items.map((item) => (
+      <li key={item}>
+        <TagChip tag={item} />
+      </li>
+    ))}
+  </ul>
+)

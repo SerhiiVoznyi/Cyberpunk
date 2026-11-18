@@ -1,0 +1,30 @@
+@use '../../styles/mixins' as *
+
+// Layout only: each chapter's theme (src/pages/collection-themes/) dresses the sheets and bodies.
+.collection-item
+    --single-stack-top: 26%
+
+    .collection-item__title
+        left: 55%
+        right: 5%
+        bottom: 11%
+        display: flex
+        flex-direction: column
+        gap: 0.6rem
+        padding: 1rem 1.25rem 1.1rem
+        background: linear-gradient(180deg, rgba(10, 10, 11, 0.88), rgba(10, 10, 11, 0.72))
+        border-left: 4px solid var(--app-color-yellow)
+
+    .collection-item__booting
+        @include hud-label
+
+    &[data-view='single']
+        // Pinned to the stack's top edge so long titles grow upward instead of leaving a gap.
+        .collection-item__title
+            top: auto
+            left: 4%
+            right: 4%
+            bottom: calc(100% - var(--single-stack-top) + 1.5%)
+            padding: 0
+            background: none
+            border: 0

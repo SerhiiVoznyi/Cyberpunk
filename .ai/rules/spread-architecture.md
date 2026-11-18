@@ -4,15 +4,17 @@ Invariants of the reader, the sheet stack and the page turn. Breaking one of the
 
 ## Registry and routing
 
-- Every navigable spread has an entry in `SPREADS` in `src/content/spreads.ts`; that order defines the counter, prev/next, arrow keys, turn direction and the website map route. `SPREADS` holds the chapters only; journal entries (`/blog/:slug`) belong to the Journal spread and are read between it and the next chapter, newest first, using each entry's `newer`/`older` neighbours (`spreadOrder` gives the turn direction). Never put entries in `SPREADS`: there may be 100k of them.
+- Every navigable spread has an entry in `SPREADS` in `src/content/spreads.ts`; that order defines the counter, prev/next, arrow keys, turn direction and the website map route. A chapter is self-describing there: `perk` (icon, tooltip place, briefing sticker) puts it on the Map with a briefing sheet (`CHAPTERS` is derived from it), `board` places its perk (a `row` of the chapter column, or a free `cell` plus an outer `lane` for its wire), and `children` files child pages under it at `<path>/:slug`. Do not add parallel per-chapter tables elsewhere.
+- `SPREADS` holds the chapters only. Child pages belong to their chapter and are read between it and the next chapter: `childOf(pathname)` resolves any of them, `children.order` gives the turn direction, and `children.slugs` gives prev/next order for collections. Journal entries (`/blog/:slug`) are read newest first through each entry's `newer`/`older` neighbours. Never put child pages in `SPREADS`: there may be 100k of them.
 - The website map is exact: `SITE_ROUTE` (`src/content/site-map.ts`) is derived from `SPREADS`, one stop per spread. The board's `MAP_ROUTE` only adds positions to it, and the phone drawer's `SiteMapList` renders it as is. Connections appear only on hover or focus, between a stop and its reading-order neighbours. Never draw decorative stops or lines that are not pages.
-- Routes live in `src/router.tsx` and render with the `location` passed in by `SpreadTransition`, never the live router location, so the outgoing spread can finish turning.
+- A bundle's siblings leave their parent in the order of the rows (or lanes) they reach, and every wire bends halfway to the nearest child, so bundles nest instead of crossing. A perk on a free cell beyond the entry column must set a `lane` above or below every tile; a straight wire would cut through the Journal's entry bundle.
+- Layouts live in `SPREAD_PAGES` (`src/pages/registry.tsx`), one entry per spread id with optional `child` layouts, and briefing bodies in `BRIEFINGS` (`src/pages/briefings.tsx`). `src/router.tsx` builds its routes from `SPREADS` and `SPREAD_PAGES` and renders them with the `location` passed in by `SpreadTransition`, never the live router location, so the outgoing spread can finish turning.
 - Each route element is remounted per pathname by the transition; do not rely on page state surviving navigation.
 
 ## Page turn
 
 - The turn runs `exiting` → `breaching` (optional) → `entering` → `idle` in `use-spread-transition.ts`. Zoom resets at the end of `exiting`; the location swaps in at the start of `entering`. Do not add a second transition component: the swap, the remount, the zoom reset and the heading focus must happen in one place.
-- `breaching` plays the Breach Protocol overlay only on the first visit to a chapter, never for journal entries (each is a first visit, and there may be thousands). The decision is made in the render that starts the turn, before `useRecordVisit` records the new path, and is kept in state for the whole turn.
+- `breaching` plays the Breach Protocol overlay only on the first visit to a chapter, never for child pages such as journal entries, applications or games (each is a first visit, and there may be thousands). The decision is made in the render that starts the turn, before `useRecordVisit` records the new path, and is kept in state for the whole turn.
 - On the Map, the root perk (and on phones the drawer's Map entry) is a two-press "start over" button built on `useResetVisits`: the first press arms it for four seconds, the second clears the visit log except the Map, so perks relock and every chapter breaches again. Elsewhere that entry stays a link to the Map.
 - The breach never mounts under `prefers-reduced-motion: reduce` or `body[data-fx='reduced']`. A tap on it, or Escape, Enter or Space, skips it; the key listener runs in the capture phase so Escape does not also reach the reader's back-to-map hotkey.
 - Any phase between `exiting` and `entering` must keep matching the exit animation selectors, or the outgoing page loses its `forwards` fill and snaps back to flat.
@@ -28,6 +30,14 @@ Invariants of the reader, the sheet stack and the page turn. Breaking one of the
 - Read mode sits outside the shell, so `/blog/:slug/read` redirects to the article (and its riddle) while locked.
 - Riddle state lives in `BreachGameProvider` above the sheet stack, because stacked sheets unmount their bodies. The riddle sheet stack sets `scrollDepth={false}` so the wheel never flips sheets mid-run.
 - This is a game gate, not access control: every route's content still ships to the client.
+- The free-play Breach Protocol game (`/games/breach-protocol`) runs its own `BreachGameProvider` and never calls `useBreachGate`, so playing it unlocks nothing. Keep game sessions away from the gate.
+
+## Collections
+
+- Applications and Games are collection chapters: a `Shelf` (`src/content/collections.ts`) holds the items, the list spread's copy and plate. One generic list spread (`src/pages/collection/`) and one generic item spread (`src/pages/collection-item/`) render every shelf; do not fork them per collection.
+- A playable item gets an `ItemPlayer` in `GAME_PLAYERS` (`src/pages/games/game-players.ts`), lazy-loaded. Its `Session` wraps the whole sheet stack (stacked sheets unmount their bodies, so a run must live above them), `Play` is the Play sheet body, and `Manual` closes the Overview sheet. A playable item's stack sets `scrollDepth={false}`.
+- Collection item visits are logged as `<chapter>:<slug>`, so a collection perk's level is items opened out of items filed.
+- The generic layouts own geometry only. A shelf's `theme` picks a `CollectionTheme` from `COLLECTION_THEMES`, which supplies the scene class, an `aria-hidden` `Backdrop` plate (depth 2.5, between the art and the sheets), the list body (`Index`), the detail bodies (`Overview`, `Details`), an optional `PlayFrame` and each sheet's title, teaser and treatment. A new theme is a folder under `src/pages/collection-themes/`, not a fork of the layouts.
 
 ## Layers and geometry
 

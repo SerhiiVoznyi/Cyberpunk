@@ -12,6 +12,7 @@ import {
   SheetStackProvider,
 } from '@/lib/sheet-stack'
 
+import { BRIEFINGS } from '../briefings'
 import { MapBackdrop } from './map-backdrop'
 import { ChapterBriefing } from './map-sections'
 import { SkillTree } from './skill-tree'
@@ -66,7 +67,9 @@ export const MapPage = () => (
             treatment="ink"
             edge="notched"
             aside={<>Spread {spreadNumber(chapter)}</>}>
-            <ChapterBriefing chapter={chapter} />
+            <ChapterBriefing chapter={chapter}>
+              {BRIEFINGS[chapter.id]?.()}
+            </ChapterBriefing>
           </Sheet>
         ))}
       </SheetStack>

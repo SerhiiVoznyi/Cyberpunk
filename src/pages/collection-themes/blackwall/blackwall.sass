@@ -1,0 +1,363 @@
+@use '../../../styles/mixins' as *
+
+// The Blackwall: Applications' spreads are a crimson data wall, and every app is a daemon run
+// against it. Every rule is scoped under the scene's theme class.
+
+.theme-blackwall
+    // Wall: code streams, a slow scan band and glitch slices, all over the plate and behind the sheets.
+    .wall-backdrop
+        pointer-events: none
+
+    .wall-backdrop__fx
+        position: absolute
+        inset: 0
+        overflow: hidden
+
+    .wall-backdrop__streams,
+    .wall-backdrop__vignette
+        position: absolute
+        inset: 0
+
+    .wall-backdrop__streams
+        background: repeating-linear-gradient(90deg, transparent 0 22px, rgba(255, 42, 61, 0.16) 22px 23px, transparent 23px 47px), repeating-linear-gradient(180deg, rgba(255, 42, 61, 0.1) 0 2px, transparent 2px 9px)
+        mask-image: linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent)
+        animation: wall-stream 16s linear infinite
+
+    .wall-backdrop__scan
+        position: absolute
+        left: 0
+        right: 0
+        top: 0
+        height: 18%
+        background: linear-gradient(180deg, transparent, var(--app-color-blackwall-glow), transparent)
+        translate: 0 -100%
+        animation: wall-scan 7s linear infinite
+
+    .wall-backdrop__slice
+        position: absolute
+        left: 0
+        right: 0
+        top: 38%
+        height: 3%
+        background: rgba(255, 42, 61, 0.35)
+        mix-blend-mode: screen
+        opacity: 0
+        animation: wall-slice 5.2s steps(1) infinite
+
+        &--late
+            top: 71%
+            height: 1.5%
+            animation-delay: 2.1s
+
+    .wall-backdrop__vignette
+        background: radial-gradient(ellipse at 50% 60%, transparent 35%, rgba(26, 3, 6, 0.88) 100%)
+
+    // Sheets: dark crimson panels with a red hairline and a faint scanline texture.
+    .sheet[data-treatment] .sheet__paper
+        color: var(--app-text-color-main)
+        background: repeating-linear-gradient(0deg, rgba(255, 42, 61, 0.05) 0 1px, transparent 1px 3px), linear-gradient(165deg, rgba(255, 42, 61, 0.14), transparent 50%), var(--app-color-blackwall-deep)
+        border-color: var(--app-color-blackwall)
+        box-shadow: inset 0 0 40px rgba(255, 42, 61, 0.12)
+
+    .sheet__header
+        border-bottom-color: var(--app-color-blackwall)
+
+    .sheet__title
+        text-shadow: 0 0 14px var(--app-color-blackwall-glow)
+
+    // Matched to the base treatment selectors' weight, so the theme wins over `ink`.
+    .sheet[data-treatment] .sheet__index,
+    .sheet[data-treatment] .sheet__spine-index
+        color: var(--app-color-blackwall-deep)
+        background: var(--app-color-blackwall)
+
+    .sheet__spine-teaser,
+    .sheet__aside
+        color: var(--app-color-blackwall)
+
+    .sheet[data-treatment] .sheet__body
+        scrollbar-color: var(--app-color-blackwall) transparent
+
+    .sheet__dim
+        background: #000
+
+    .tag-chip
+        color: var(--app-text-color-main)
+        background: transparent
+        border-color: rgba(255, 42, 61, 0.6)
+
+    .spread-kicker
+        color: var(--app-color-blackwall)
+
+    &.collection .collection__title,
+    &.collection-item .collection-item__title
+        border-left-color: var(--app-color-blackwall)
+
+    .display-title
+        filter: drop-shadow(0 0 16px var(--app-color-blackwall-glow))
+        animation: wall-jitter 6s steps(1) infinite
+
+    // Daemon list: one row per application, styled like the Breach Protocol daemon queue.
+    .daemon-list__head
+        display: grid
+        grid-template-columns: 5.5rem minmax(0, 1fr) 7rem 6.5rem
+        gap: 1rem
+        margin: 0 0 0.4rem
+        padding: 0 0.9rem
+        @include hud-label
+        font-size: var(--app-text-small)
+        color: var(--app-text-color-muted)
+
+    .daemon-list
+        display: flex
+        flex-direction: column
+        gap: 0.6rem
+        margin: 0
+        padding: 0
+        list-style: none
+
+    .daemon
+        animation: daemon-in 420ms var(--spread-settle-ease) both
+        animation-delay: var(--daemon-delay, 0ms)
+
+    .daemon__link
+        position: relative
+        display: grid
+        grid-template-columns: 5.5rem minmax(0, 1fr) 7rem 6.5rem
+        grid-template-areas: 'index head state ram' '. summary summary summary' '. meta meta meta'
+        align-items: center
+        gap: 0.35rem 1rem
+        padding: 0.8rem 0.9rem 0.9rem
+        overflow: hidden
+        color: var(--app-text-color-main)
+        background: rgba(255, 42, 61, 0.05)
+        border: 1px solid rgba(255, 42, 61, 0.45)
+        @include notch-corner(10px)
+        transition: background 160ms ease, border-color 160ms ease
+
+        &:hover,
+        &:focus-visible
+            background: rgba(255, 42, 61, 0.13)
+            border-color: var(--app-color-blackwall)
+
+            .daemon__upload
+                scale: 1 1
+
+            .daemon__name
+                color: var(--app-color-blackwall)
+
+        // The notch clips an outline, so focus draws inside the row.
+        &:focus-visible
+            outline: none
+            box-shadow: inset 0 0 0 2px var(--app-color-cyan)
+
+    .daemon__index
+        grid-area: index
+        @include hud-label
+        color: var(--app-color-blackwall)
+
+    .daemon__head
+        grid-area: head
+        display: flex
+        flex-direction: column
+        min-width: 0
+
+    .daemon__name
+        font-family: var(--app-font-display)
+        font-size: 1.15rem
+        font-weight: 700
+        line-height: 1.15
+        letter-spacing: 0.04em
+        text-transform: uppercase
+        transition: color 160ms ease
+
+    .daemon__codename
+        @include hud-label
+        font-size: var(--app-text-small)
+        color: var(--app-text-color-muted)
+
+    .daemon__state
+        grid-area: state
+        justify-self: start
+        padding: 0.1rem 0.45rem
+        @include hud-label
+        font-size: var(--app-text-small)
+        color: var(--app-color-blackwall-deep)
+        background: var(--app-color-blackwall)
+
+    .daemon__ram
+        grid-area: ram
+        display: flex
+        gap: 3px
+
+    .daemon__pip
+        width: 0.5rem
+        height: 0.9rem
+        border: 1px solid var(--app-color-blackwall)
+
+        &[data-used]
+            background: var(--app-color-blackwall)
+            box-shadow: 0 0 6px var(--app-color-blackwall-glow)
+
+    .daemon__summary
+        grid-area: summary
+        font-size: 0.98rem
+        line-height: 1.5
+        color: var(--app-text-color-muted)
+
+    .daemon__meta
+        grid-area: meta
+        display: flex
+        flex-wrap: wrap
+        gap: 0.3rem 0.9rem
+        @include hud-label
+        font-size: var(--app-text-small)
+        color: var(--app-color-blackwall)
+
+    .daemon__upload
+        position: absolute
+        left: 0
+        bottom: 0
+        width: 100%
+        height: 2px
+        background: var(--app-color-blackwall)
+        box-shadow: 0 0 8px var(--app-color-blackwall)
+        transform-origin: left
+        scale: 0 1
+        transition: scale 600ms var(--spread-settle-ease)
+
+    // Dossier: the daemon's readme and signature on its own spread.
+    .dossier__boot
+        margin: 0 0 0.75rem
+        @include hud-label
+        color: var(--app-color-blackwall)
+
+    .dossier__section + .dossier__section,
+    .sheet-text--lead + .dossier__section
+        margin-top: 1.1rem
+
+    .dossier__heading
+        margin: 0 0 0.4rem
+        @include hud-label
+        font-size: 0.92rem
+        color: var(--app-color-blackwall)
+
+    .dossier__rows
+        display: grid
+        grid-template-columns: 7rem minmax(0, 1fr)
+        gap: 0.55rem 1rem
+        align-items: center
+        margin: 0
+
+        dt
+            @include hud-label
+            font-size: var(--app-text-small)
+            color: var(--app-text-color-muted)
+
+        dd
+            margin: 0
+
+    .dossier__mono
+        font-family: var(--app-font-mono)
+        letter-spacing: 0.06em
+
+    .dossier__ram
+        display: flex
+        align-items: center
+        gap: 0.6rem
+        @include hud-label
+
+    .dossier__links
+        display: flex
+        flex-wrap: wrap
+        gap: 0.6rem
+        margin: 1.3rem 0 0
+        padding: 0
+        list-style: none
+
+    .dossier__execute
+        display: inline-flex
+        align-items: center
+        gap: 0.45rem
+        padding: 0.5rem 1rem 0.5rem 0.8rem
+        font-family: var(--app-font-display)
+        font-weight: 700
+        letter-spacing: 0.06em
+        text-transform: uppercase
+        color: var(--app-color-blackwall-deep)
+        background: var(--app-color-blackwall)
+        @include notch-corner-right(10px)
+
+        i
+            font-size: 1.1rem
+
+        &:hover
+            background: var(--app-text-color-main)
+
+        &:focus-visible
+            outline: 2px solid var(--app-color-cyan)
+            outline-offset: -4px
+
+    // Single view: the daemon row stacks, so the name keeps the full width.
+    &[data-view='single']
+        .daemon-list__head
+            display: none
+
+        .daemon__link
+            grid-template-columns: auto minmax(0, 1fr)
+            grid-template-areas: 'index state' 'head head' 'ram ram' 'summary summary' 'meta meta'
+
+    @media (prefers-reduced-motion: reduce)
+        .wall-backdrop__streams,
+        .wall-backdrop__scan,
+        .wall-backdrop__slice,
+        .display-title,
+        .daemon
+            animation: none
+
+        .daemon__upload
+            transition: none
+
+body[data-fx='reduced'] .theme-blackwall
+    .wall-backdrop__streams,
+    .display-title,
+    .daemon
+        animation: none
+
+    .wall-backdrop__scan,
+    .wall-backdrop__slice
+        display: none
+
+@keyframes wall-stream
+    to
+        background-position: 0 0, 0 180px
+
+@keyframes wall-scan
+    to
+        translate: 0 650%
+
+@keyframes wall-slice
+    0%, 100%
+        opacity: 0
+        translate: 0 0
+    62%
+        opacity: 1
+        translate: -2% 0
+    64%
+        opacity: 0.6
+        translate: 3% 0
+    66%
+        opacity: 0
+
+@keyframes wall-jitter
+    0%, 90%, 100%
+        translate: 0 0
+    91%
+        translate: -3px 0
+    93%
+        translate: 2px 0
+
+@keyframes daemon-in
+    from
+        opacity: 0
+        translate: -12px 0

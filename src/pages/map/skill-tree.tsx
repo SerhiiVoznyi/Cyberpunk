@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { RESET_VISITS_LABEL, ResetStatus } from '@/components'
-import { CHAPTERS } from '@/content/spreads'
+import { CHAPTERS, childVisitId } from '@/content/spreads'
 import { type CSSVars, cx } from '@/lib/cx'
 import {
   type ResetVisitsState,
@@ -30,10 +30,10 @@ import {
 
 type Visits = ReturnType<typeof useVisits>
 
-// Entries and the archive are filed in the Journal, so aiming at one brings its briefing forward.
+// Entries and the archive are filed under their chapter, so aiming at one brings its briefing forward.
 const briefingFor = (stop: MapStop) => {
-  if (stop.kind === 'entry' || stop.kind === 'archive') return 'journal'
-  return CHAPTERS.some((chapter) => chapter.id === stop.id) ? stop.id : null
+  const id = stop.tier === 2 ? stop.parent : stop.id
+  return CHAPTERS.some((chapter) => chapter.id === id) ? id : null
 }
 
 const childrenOf = (id: string) => MAP_ROUTE.filter((stop) => stop.parent === id)
@@ -47,11 +47,16 @@ const neighbours = (id: string) => {
 }
 
 // A perk's level is how much of it the reader has opened: the Journal and its archive count every
-// entry read, the Map counts chapters, anything else is one visit.
+// entry read, a collection counts its items, the Map counts chapters, anything else is one visit.
 const levelOf = (stop: MapStop, { visited, entryCount }: Visits) => {
-  if (stop.id === 'journal' || stop.kind === 'archive') {
+  if (stop.spread.id === 'journal' || stop.kind === 'archive') {
     const { total } = getJournalManifest()
     return { points: Math.min(entryCount, total), max: total }
+  }
+  const items = stop.spread.children?.slugs?.()
+  if (stop.kind === 'chapter' && items && items.length > 0) {
+    const ids = items.map((slug) => childVisitId(stop.spread, slug))
+    return { points: ids.filter((id) => visited.has(id)).length, max: ids.length }
   }
   const children = childrenOf(stop.id)
   if (children.length > 0) {

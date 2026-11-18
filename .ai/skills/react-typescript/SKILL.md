@@ -10,7 +10,7 @@ description: Build and edit React 19 + TypeScript UI in this Vite app (component
 - **Kebab-case** file names; PascalCase component identifiers; named exports everywhere except the default-exported app root in `app.tsx`.
 - Function components only. Type props explicitly; no `any`.
 - Providers live in `src/app.tsx` (`MantineProvider` → `BrowserRouter` → `ReaderProvider` → `AudioProvider` → `ReaderShell`).
-- Routes live in `src/router.tsx` as `AppRouter({ location })`. `ReaderShell` receives it as `renderSpread`, and `SpreadTransition` decides which location is rendered. Do not add a second router or read `useLocation()` to decide what a page shows outside the routed tree.
+- Routes live in `src/router.tsx` as `AppRouter({ location, locked })`, built from `SPREADS` and `SPREAD_PAGES`. `ReaderShell` receives it as `renderSpread`, and `SpreadTransition` decides which location is rendered. Do not add a second router or read `useLocation()` to decide what a page shows outside the routed tree.
 - Reach reader-wide state through hooks: `useReader()` (view mode, zoom, FX), `useSpreadNavigation()` (index, prev/next, map), `useSoundtrack()`, `useSheetStack()` / `useSheetState(id)`.
 - Use Mantine for accessible primitives (`Tooltip`, `VisuallyHidden`) and `@mantine/hooks` (`useLocalStorage`, `useMediaQuery`, `useReducedMotion`, `useHotkeys`) before writing your own. Register any new Mantine component's CSS in `main.tsx`.
 - CSS custom properties in `style` props use the `CSSVars` type from `@/lib/cx`; class lists use `cx(...)`.
@@ -32,5 +32,5 @@ description: Build and edit React 19 + TypeScript UI in this Vite app (component
 ## Checklist
 
 1. Read `app.tsx`, `router.tsx`, the target page, and [spread-architecture](../../rules/spread-architecture.md) before changing structure.
-2. Add routes in `router.tsx` and register navigable spreads in `src/content/spreads.ts`.
+2. Register navigable spreads in `src/content/spreads.ts` and their layouts in `SPREAD_PAGES` (`src/pages/registry.tsx`); the router builds its routes from both.
 3. Run `npm run lint` (zero warnings) and `npm run build`.

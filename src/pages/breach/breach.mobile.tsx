@@ -4,7 +4,7 @@ import './breach.mobile.sass'
 import { useCallback } from 'react'
 
 import { MobileHeader } from '@/components'
-import { BreachGameProvider } from '@/lib/breach'
+import { BreachGameProvider, BreachProtocol } from '@/lib/breach'
 import { useBreachGate } from '@/lib/reader'
 import {
   Plate,
@@ -14,7 +14,7 @@ import {
   SheetStackProvider,
 } from '@/lib/sheet-stack'
 
-import { BreachManual, BreachProtocol } from './breach-sections'
+import { BreachManual } from './breach-sections'
 import { BREACH_ORDER, BREACH_SHEETS, breachTargetLabel } from './breach-sheets'
 
 type BreachMobileProps = {

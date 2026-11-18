@@ -12,6 +12,7 @@ import {
   SheetStackProvider,
 } from '@/lib/sheet-stack'
 
+import { BRIEFINGS } from '../briefings'
 import { ChapterBriefing } from './map-sections'
 
 // The website map lives in the navigation drawer on phones, so the board is not drawn here.
@@ -42,8 +43,9 @@ export const MapMobile = () => (
             edge="notched">
             <ChapterBriefing
               chapter={chapter}
-              decorated={false}
-            />
+              decorated={false}>
+              {BRIEFINGS[chapter.id]?.()}
+            </ChapterBriefing>
           </Sheet>
         ))}
       </SheetStack>

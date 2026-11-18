@@ -2,7 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useLocalStorage } from '@mantine/hooks'
 
-import { entrySlugOf, findSpreadIndex, SPREADS } from '@/content/spreads'
+import {
+  childOf,
+  childVisitId,
+  entrySlugOf,
+  findSpreadIndex,
+  SPREADS,
+} from '@/content/spreads'
 
 import { useBreachGate } from './use-breach-gate'
 
@@ -36,14 +42,18 @@ const withVisit = (log: VisitLog, pathname: string): VisitLog => {
           entryCount: log.entryCount + 1,
         }
   }
-  const spread = SPREADS[findSpreadIndex(pathname)]
-  if (!spread || log.spreads.includes(spread.id)) return log
-  return { ...log, spreads: [...log.spreads, spread.id] }
+  const child = childOf(pathname)
+  const id = child
+    ? childVisitId(child.spread, child.slug)
+    : SPREADS[findSpreadIndex(pathname)]?.id
+  if (!id || log.spreads.includes(id)) return log
+  return { ...log, spreads: [...log.spreads, id] }
 }
 
 /**
- * What this reader has opened, kept across visits: chapter ids and `post:<slug>` ids for the
- * most recent entries, plus how many distinct entries have been read.
+ * What this reader has opened, kept across visits: chapter ids, `<chapter>:<slug>` ids for
+ * collection items, `post:<slug>` ids for the most recent entries, plus how many distinct
+ * entries have been read.
  */
 export const useVisits = () => {
   const [log] = useVisitStore()

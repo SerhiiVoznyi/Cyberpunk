@@ -1,0 +1,32 @@
+// Phone: the wall keeps only its code streams, and each daemon row stacks to full width.
+.theme-blackwall[data-view='phone']
+    .mobile-header
+        border-bottom-color: var(--app-color-blackwall)
+
+    .mobile-header__title
+        --title-ink: var(--app-color-blackwall)
+
+    .mobile-header__kicker
+        color: var(--app-color-blackwall)
+
+    .daemon-list__head
+        display: none
+
+    .daemon__link
+        grid-template-columns: auto minmax(0, 1fr)
+        grid-template-areas: 'index state' 'head head' 'ram ram' 'summary summary' 'meta meta'
+        padding: 0.75rem
+
+    .dossier__rows
+        grid-template-columns: minmax(0, 1fr)
+        gap: 0.2rem
+
+        dd + dt
+            margin-top: 0.5rem
+
+    .dossier__links
+        flex-direction: column
+
+    .dossier__execute
+        justify-content: center
+        min-height: var(--phone-touch)

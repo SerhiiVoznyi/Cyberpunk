@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useReducedMotion } from '@mantine/hooks'
 
-import { entrySlugOf, findSpreadIndex, spreadOrder, SPREADS } from '@/content/spreads'
+import { childOf, findSpreadIndex, spreadOrder, SPREADS } from '@/content/spreads'
 
 import { useBreachGate, useReader, useVisits } from '../reader'
 
@@ -37,11 +37,12 @@ export const useSpreadTransition = () => {
   const [direction, setDirection] = useState<TurnDirection>('forward')
   const [breach, setBreach] = useState(false)
 
-  // Journal entries never breach: there may be thousands, and each one is a first visit.
-  // A locked route already shows the playable riddle, so it gets no cinematic on top.
+  // Child pages (journal entries, applications, games) never breach: there may be thousands,
+  // and each one is a first visit. A locked route already shows the playable riddle, so it gets
+  // no cinematic on top.
   const shouldBreach = (pathname: string, locked: boolean) => {
     if (locked || reducedMotion || fx === 'reduced') return false
-    if (entrySlugOf(pathname) !== null) return false
+    if (childOf(pathname) !== null) return false
     const spread = SPREADS[findSpreadIndex(pathname)]
     return Boolean(spread) && !visited.has(spread.id)
   }

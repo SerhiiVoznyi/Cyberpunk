@@ -1,4 +1,5 @@
 import { type PerkIcon, perkIconUrl, SITE_ROUTE, type SiteStop } from '@/content/site-map'
+import { JOURNAL_INDEX, type SpreadMeta, SPREADS } from '@/content/spreads'
 
 import { seeded } from './seeded'
 
@@ -19,6 +20,8 @@ export type MapStop = SiteStop & {
   code: string
   /** Which way the tooltip opens, so it stays on the open board. */
   side: 'left' | 'right'
+  /** The outer lane its wire runs along, for a perk placed on a free cell. */
+  lane?: number
 }
 
 /** A locked socket: board furniture with no spread behind it. */
@@ -39,21 +42,21 @@ const ENTRY_X = 472
 const ROW_STEP = 104
 const ROW_MIN = 96
 const ROW_MAX = 408
-const CHAPTER_ROWS: Record<string, number> = {
-  profile: 96,
-  experience: 200,
-  journal: 304,
-  contact: 408,
-}
 
 /** Tile centres sit on a 4-unit grid so bundles meet the connector pins squarely. */
 const snap = (value: number) => Math.round(value / 4) * 4
 
 const codeOf = (index: number) => `PRK_${String(index + 1).padStart(4, '0')}`
 
+const chapterSpot = (spread: SpreadMeta): Point => {
+  const board = spread.board
+  if (!board) return [CHAPTER_X, ROOT[1]]
+  return 'row' in board ? [CHAPTER_X, board.row] : [board.cell[0], board.cell[1]]
+}
+
 // A column of entries centres on the Journal row, then slides to stay inside the board.
 const entryRows = (count: number) => {
-  const centre = CHAPTER_ROWS.journal
+  const centre = chapterSpot(SPREADS[JOURNAL_INDEX])[1]
   if (count === 0) return []
   const rows = Array.from(
     { length: count },
@@ -75,9 +78,11 @@ const buildRoute = (): MapStop[] => {
       stop.tier === 0
         ? ROOT
         : stop.tier === 1
-          ? [CHAPTER_X, CHAPTER_ROWS[stop.id] ?? ROOT[1]]
+          ? chapterSpot(stop.spread)
           : [ENTRY_X, rows[entryRow++]]
-    return { ...stop, x, y, code: codeOf(index), side: 'right' }
+    const board = stop.tier === 1 ? stop.spread.board : undefined
+    const lane = board && 'lane' in board ? board.lane : undefined
+    return { ...stop, x, y, code: codeOf(index), side: 'right', lane }
   })
 }
 
@@ -130,7 +135,16 @@ const STRAND_GAP = 3.5
 // Board wiring runs out of the right edge of a tile and into the left edge of the next: horizontal,
 // a 45-degree chamfer, vertical, another chamfer, horizontal again. Strand `k` of a bundle shifts
 // every segment by the same gap toward the outside of each bend, so the strands stay parallel.
-const wire = (from: Point, to: Point, lane: number, spread: number, k: number) => {
+// A bundle bends halfway to its nearest child (`reach`), so a wire to a farther cell turns with
+// its siblings and then runs straight between their tiles.
+const wire = (
+  from: Point,
+  to: Point,
+  reach: number,
+  lane: number,
+  spread: number,
+  k: number,
+) => {
   const sx = from[0] + HALF + 6
   const ex = to[0] - HALF - 6
   const base = to[1] - (from[1] + spread)
@@ -142,13 +156,77 @@ const wire = (from: Point, to: Point, lane: number, spread: number, k: number) =
   const shift = k * STRAND_GAP
   const sy = round(from[1] + spread - s * shift)
   const ey = round(to[1] - s * shift)
-  const mid = round((sx + ex) / 2 + lane + shift)
+  const mid = round((sx + reach - HALF - 6) / 2 + lane + shift)
   const c = Math.min(CHAMFER, Math.abs(ey - sy) / 2)
   return `M${sx} ${sy}H${mid - c}L${mid} ${sy + s * c}V${ey - s * c}L${mid + c} ${ey}H${ex}`
 }
 
+const unit = (from: Point, to: Point): Point => [
+  Math.sign(to[0] - from[0]),
+  Math.sign(to[1] - from[1]),
+]
+
+// An orthogonal polyline with chamfered corners. Strand `k` shifts every segment by the same gap
+// to its left, so the strands of a bundle stay parallel through every bend.
+const chamfered = (points: readonly Point[], k: number) => {
+  const offset = k * STRAND_GAP
+  const dirs = points.slice(1).map((point, index) => unit(points[index], point))
+  const shifted = points.map(([x, y], index): Point => {
+    const around = [dirs[index - 1], dirs[index]].filter(Boolean)
+    const vertical = around.find(([dx]) => dx === 0)
+    const horizontal = around.find(([, dy]) => dy === 0)
+    return [
+      x - (vertical ? offset * vertical[1] : 0),
+      y + (horizontal ? offset * horizontal[0] : 0),
+    ]
+  })
+  const last = shifted.length - 1
+  let d = `M${round(shifted[0][0])} ${round(shifted[0][1])}`
+  for (let index = 1; index < last; index += 1) {
+    const [x, y] = shifted[index]
+    const [ix, iy] = dirs[index - 1]
+    const [ox, oy] = dirs[index]
+    const c = Math.min(
+      CHAMFER,
+      Math.hypot(x - shifted[index - 1][0], y - shifted[index - 1][1]) / 2,
+      Math.hypot(shifted[index + 1][0] - x, shifted[index + 1][1] - y) / 2,
+    )
+    d += `L${round(x - ix * c)} ${round(y - iy * c)}L${round(x + ox * c)} ${round(y + oy * c)}`
+  }
+  return `${d}L${round(shifted[last][0])} ${round(shifted[last][1])}`
+}
+
+// A wire to a free cell leaves with its siblings, climbs or drops to an outer lane clear of every
+// tile, runs along it and comes back in just before the cell.
+const laneWire = (
+  from: Point,
+  to: Point,
+  laneY: number,
+  reach: number,
+  lane: number,
+  spread: number,
+  k: number,
+) => {
+  const sx = from[0] + HALF + 6
+  const ex = to[0] - HALF - 6
+  const sy = from[1] + spread
+  const bend = (sx + reach - HALF - 6) / 2 + lane
+  const drop = ex - CHAMFER * 2
+  return chamfered(
+    [
+      [sx, sy],
+      [bend, sy],
+      [bend, laneY],
+      [drop, laneY],
+      [drop, to[1]],
+      [ex, to[1]],
+    ],
+    k,
+  )
+}
+
 const buildTraces = (): MapTrace[] => {
-  const nodes = new Map<string, { x: number; y: number }>(
+  const nodes = new Map<string, { x: number; y: number; lane?: number }>(
     [...MAP_ROUTE, ...MAP_SOCKETS].map((node) => [node.id, node]),
   )
   const edges = [
@@ -161,23 +239,27 @@ const buildTraces = (): MapTrace[] => {
   ]
 
   return edges.map((edge) => {
-    const siblings = edges.filter((other) => other.from === edge.from)
-    const order = siblings.indexOf(edge) - (siblings.length - 1) / 2
+    // Siblings leave the parent top to bottom in the order of the rows (or lanes) they reach.
+    const level = (node: { y: number; lane?: number }) => node.lane ?? node.y
+    const siblings = edges
+      .filter((other) => other.from === edge.from)
+      .map((other) => nodes.get(other.to)!)
+      .sort((a, b) => level(a) - level(b) || a.x - b.x)
     const from = nodes.get(edge.from)!
     const to = nodes.get(edge.to)!
+    const order = siblings.indexOf(to) - (siblings.length - 1) / 2
+    const reach = Math.min(...siblings.map((sibling) => sibling.x))
     const strands = edge.live ? [-1, 0, 1] : [-0.5, 0.5]
+    // The sibling that runs farthest from the parent's row turns first, so bundles nest
+    // instead of one bundle's run crossing another's drop.
+    const lane = -Math.abs(order) * 14
+    const spread = Math.round(order * 12)
     return {
       ...edge,
-      // The sibling that runs farthest from the parent's row turns first, so bundles nest
-      // instead of one bundle's run crossing another's drop.
       strands: strands.map((k) =>
-        wire(
-          [from.x, from.y],
-          [to.x, to.y],
-          -Math.abs(order) * 14,
-          Math.round(order * 12),
-          k,
-        ),
+        to.lane === undefined
+          ? wire([from.x, from.y], [to.x, to.y], reach, lane, spread, k)
+          : laneWire([from.x, from.y], [to.x, to.y], to.lane, reach, lane, spread, k),
       ),
     }
   })
@@ -208,14 +290,24 @@ const buildStubs = (): BoardStub[] => {
     })
   }
 
-  // A stub only leaves a tile on a side with no tile stacked there, so it never crosses a caption.
+  // A stub only leaves a tile on a side with no tile stacked there and no outer lane running
+  // past, so it never crosses a caption or a live wire.
   const nodes = [...MAP_ROUTE, ...MAP_SOCKETS]
+  const lanes = MAP_ROUTE.flatMap((stop) => (stop.lane === undefined ? [] : [stop.lane]))
+  const clear = (from: number, to: number) =>
+    !lanes.some(
+      (lane) => lane > Math.min(from, to) - 10 && lane < Math.max(from, to) + 10,
+    )
   for (const node of nodes) {
     const column = nodes.filter(
       (other) => other !== node && Math.abs(other.x - node.x) < 40,
     )
-    const freeAbove = !column.some((other) => other.y < node.y && node.y - other.y < 150)
-    const freeBelow = !column.some((other) => other.y > node.y && other.y - node.y < 150)
+    const freeAbove =
+      !column.some((other) => other.y < node.y && node.y - other.y < 150) &&
+      clear(node.y - HALF, node.y - HALF - 42)
+    const freeBelow =
+      !column.some((other) => other.y > node.y && other.y - node.y < 150) &&
+      clear(node.y + HALF, node.y + HALF + 42)
     if (!freeAbove && !freeBelow) continue
     const s = freeAbove && (!freeBelow || random() < 0.5) ? -1 : 1
     const x = Math.round(node.x - HALF + 12 + random() * (PERK_SIZE - 24))

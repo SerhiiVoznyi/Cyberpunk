@@ -1,0 +1,31 @@
+// Phone: no bezel or marquee, just the scanlines; the CRT and the cartridge cards go full width.
+.theme-arcade[data-view='phone']
+    .mobile-header
+        border-bottom-color: var(--app-color-arcade-magenta)
+
+    .mobile-header__kicker
+        color: var(--app-color-arcade-phosphor)
+
+    // At header size the offset shadow reads as a doubled title.
+    .mobile-header__title
+        filter: none
+    .crt-screen
+        padding: 0.4rem
+        box-shadow: 0 0 0 3px var(--app-color-arcade-screen), 0 0 0 4px var(--app-color-cyan)
+
+    .crt-screen__glass
+        padding: 0.3rem
+
+    .cartridge-card__rows
+        grid-template-columns: minmax(0, 1fr)
+        gap: 0.2rem
+
+        dd + dt
+            margin-top: 0.5rem
+
+    .cartridge-card__links
+        flex-direction: column
+
+    .cartridge-card__continue
+        justify-content: center
+        min-height: var(--phone-touch)

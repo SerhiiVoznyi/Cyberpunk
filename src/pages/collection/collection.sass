@@ -1,0 +1,24 @@
+@use '../../styles/mixins' as *
+
+// Layout only: each chapter's theme (src/pages/collection-themes/) dresses the sheets and lists.
+.collection
+    --single-stack-top: 22%
+
+    .collection__title
+        top: 11%
+        left: 3%
+        display: flex
+        align-items: baseline
+        flex-wrap: wrap
+        gap: 0.5rem 1.5rem
+
+    .collection__stack
+        inset: 29% 3% 5% 3%
+
+    &[data-view='single']
+        .collection__title
+            top: 9%
+            left: 4%
+
+        .collection__stack
+            inset: var(--single-stack-top) 4% 4% 4%

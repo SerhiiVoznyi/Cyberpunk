@@ -1,0 +1,38 @@
+.breach-protocol-game
+    display: flex
+    flex-direction: column
+    gap: 0.9rem
+
+    .breach-protocol-game__again
+        align-self: flex-start
+
+.collection-item[data-view='single'] .breach-protocol-game
+    .breach-game__matrix
+        max-width: min(22rem, 46cqh)
+
+    .breach-game__cell
+        font-size: clamp(0.78rem, 2cqw, 1.05rem)
+
+// Phone: one column, the matrix full width so each cell stays a comfortable touch target.
+.collection-item-m .breach-protocol-game
+    .breach-game
+        grid-template-columns: minmax(0, 1fr)
+        align-items: start
+        gap: 0.9rem
+
+    .breach-game__matrix
+        max-width: none
+
+    .breach-game__cell
+        font-size: 1rem
+
+    .breach-game__panel
+        gap: 0.7rem
+
+    .breach-game__code,
+    .breach-game__regen
+        min-width: 3rem
+        height: var(--phone-touch)
+
+    .breach-game__status
+        min-height: 0

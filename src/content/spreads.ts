@@ -17,11 +17,11 @@ export type ChapterPerk = {
 
 /**
  * Where a chapter's perk sits on the board (500 units tall): a row of the chapter column, or a
- * free cell (`[x, y]`) beyond the Journal's entries. A cell's wire runs along the outer `lane`
- * (a board `y` above or below every tile) so it never crosses another bundle.
+ * free cell (`[x, y]`) beside its parent. A cell's wire may run along an outer `lane` (a board
+ * `y` above or below every tile) so it never crosses another bundle.
  */
 export type BoardSpot =
-  { row: number } | { cell: readonly [number, number]; lane: number }
+  { row: number } | { cell: readonly [number, number]; lane?: number }
 
 /** Pages filed under a chapter at `<path>/:slug`, read between it and the next chapter. */
 export type SpreadChildren = {
@@ -44,6 +44,8 @@ export type SpreadMeta = {
   date?: string
   /** Set on chapters: a perk on the Map and a briefing sheet beside it. */
   perk?: ChapterPerk
+  /** The chapter it opens from on the Map; the Map itself when unset. */
+  parent?: string
   board?: BoardSpot
   children?: SpreadChildren
 }
@@ -81,6 +83,17 @@ export const SPREADS: readonly SpreadMeta[] = [
     board: { row: 96 },
   },
   {
+    id: 'contact',
+    path: '/contact',
+    label: 'Contact',
+    chapter: 'Contact',
+    kind: 'split',
+    teaser: 'Open a channel.',
+    perk: { icon: 'contact', place: 'Open channel', sticker: STICKERS.antenna },
+    parent: 'profile',
+    board: { cell: [472, 96] },
+  },
+  {
     id: 'experience',
     path: '/experience',
     label: 'Experience',
@@ -88,39 +101,41 @@ export const SPREADS: readonly SpreadMeta[] = [
     kind: 'split',
     teaser: 'What I build, and the stack I build it with.',
     perk: { icon: 'experience', place: 'Combat record', sticker: STICKERS.server },
-    board: { row: 200 },
+    board: { row: 252 },
   },
   {
     id: 'applications',
-    path: '/applications',
+    path: '/experience/applications',
     label: 'Applications',
     chapter: 'Applications',
     kind: 'paper',
     teaser: 'Software I designed, built and shipped.',
     perk: { icon: 'applications', place: 'Software foundry', sticker: STICKERS.cloud },
-    board: { cell: [640, 148], lane: 30 },
+    parent: 'experience',
+    board: { cell: [472, 200] },
     children: collectionChildren('applications', APPLICATIONS),
   },
   {
     id: 'games',
-    path: '/games',
+    path: '/experience/games',
     label: 'Games',
     chapter: 'Games',
     kind: 'paper',
     teaser: 'Small games you can play right here.',
     perk: { icon: 'games', place: 'Braindance arcade', sticker: STICKERS.chip },
-    board: { cell: [640, 356], lane: 478 },
+    parent: 'experience',
+    board: { cell: [472, 304] },
     children: collectionChildren('games', GAMES),
   },
   {
     id: 'journal',
     path: '/blog',
-    label: 'Journal',
-    chapter: 'Journal',
+    label: 'Archive',
+    chapter: 'Archive',
     kind: 'paper',
     teaser: 'Field notes on architecture, cloud and leadership.',
-    perk: { icon: 'journal', place: 'Memory shards', sticker: STICKERS.nodes },
-    board: { row: 304 },
+    perk: { icon: 'archive', place: 'Memory shards', sticker: STICKERS.nodes },
+    board: { row: 408 },
     children: {
       idPrefix: 'post',
       // Entries sort newest first, so turning from one entry to an older one turns forward.
@@ -129,16 +144,6 @@ export const SPREADS: readonly SpreadMeta[] = [
         return position ? position / (getJournalManifest().total + 1) : 0.5
       },
     },
-  },
-  {
-    id: 'contact',
-    path: '/contact',
-    label: 'Contact',
-    chapter: 'Contact',
-    kind: 'split',
-    teaser: 'Open a channel.',
-    perk: { icon: 'contact', place: 'Open channel', sticker: STICKERS.antenna },
-    board: { row: 408 },
   },
 ]
 
@@ -152,8 +157,6 @@ export const JOURNAL_INDEX = SPREADS.findIndex((spread) => spread.id === 'journa
 const normalize = (pathname: string) =>
   pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
 
-const CHILD_PATH = /^(\/[^/]+)\/([^/]+)$/
-
 export type SpreadChild = {
   spreadIndex: number
   spread: SpreadMeta & { children: SpreadChildren }
@@ -163,16 +166,23 @@ export type SpreadChild = {
 const hasChildren = (spread: SpreadMeta): spread is SpreadChild['spread'] =>
   Boolean(spread.children)
 
-/** The chapter and slug of a child page (`/blog/:slug`, `/games/:slug`, …), or `null`. */
+// The one path segment after a chapter's own path, or `null`.
+const slugUnder = (spread: SpreadMeta, path: string) => {
+  const rest = path.startsWith(`${spread.path}/`)
+    ? path.slice(spread.path.length + 1)
+    : ''
+  return rest && !rest.includes('/') ? rest : null
+}
+
+/** The chapter and slug of a child page (`/blog/:slug`, `/experience/games/:slug`, …), or `null`. */
 export const childOf = (pathname: string): SpreadChild | null => {
-  const match = CHILD_PATH.exec(normalize(pathname))
-  if (!match) return null
-  const spreadIndex = SPREADS.findIndex(
-    (spread) => spread.path === match[1] && hasChildren(spread),
-  )
-  const spread = SPREADS[spreadIndex]
-  if (!spread || !hasChildren(spread)) return null
-  return { spreadIndex, spread, slug: decodeURIComponent(match[2]) }
+  const path = normalize(pathname)
+  for (const [spreadIndex, spread] of SPREADS.entries()) {
+    if (!hasChildren(spread)) continue
+    const slug = slugUnder(spread, path)
+    if (slug !== null) return { spreadIndex, spread, slug: decodeURIComponent(slug) }
+  }
+  return null
 }
 
 export const childPath = (spread: SpreadMeta, slug: string) =>

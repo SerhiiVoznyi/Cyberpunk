@@ -30,9 +30,9 @@ import {
 
 type Visits = ReturnType<typeof useVisits>
 
-// Entries and the archive are filed under their chapter, so aiming at one brings its briefing forward.
+// Entries are filed under the Archive, so aiming at one brings its briefing forward.
 const briefingFor = (stop: MapStop) => {
-  const id = stop.tier === 2 ? stop.parent : stop.id
+  const id = stop.kind === 'entry' ? stop.parent : stop.id
   return CHAPTERS.some((chapter) => chapter.id === id) ? id : null
 }
 
@@ -46,10 +46,10 @@ const neighbours = (id: string) => {
   ])
 }
 
-// A perk's level is how much of it the reader has opened: the Journal and its archive count every
-// entry read, a collection counts its items, the Map counts chapters, anything else is one visit.
+// A perk's level is how much of it the reader has opened: the Archive counts every entry read, a
+// collection counts its items, the Map counts chapters, anything else is one visit.
 const levelOf = (stop: MapStop, { visited, entryCount }: Visits) => {
-  if (stop.spread.id === 'journal' || stop.kind === 'archive') {
+  if (stop.spread.id === 'journal') {
     const { total } = getJournalManifest()
     return { points: Math.min(entryCount, total), max: total }
   }
@@ -58,11 +58,10 @@ const levelOf = (stop: MapStop, { visited, entryCount }: Visits) => {
     const ids = items.map((slug) => childVisitId(stop.spread, slug))
     return { points: ids.filter((id) => visited.has(id)).length, max: ids.length }
   }
-  const children = childrenOf(stop.id)
-  if (children.length > 0) {
+  if (stop.kind === 'root') {
     return {
-      points: children.filter((child) => visited.has(child.id)).length,
-      max: children.length,
+      points: CHAPTERS.filter((chapter) => visited.has(chapter.id)).length,
+      max: CHAPTERS.length,
     }
   }
   return { points: visited.has(stop.id) ? 1 : 0, max: 1 }
@@ -72,7 +71,6 @@ const TIP_KIND: Record<MapStop['kind'], string> = {
   root: 'Root',
   chapter: 'Chapter',
   entry: 'Entry',
-  archive: 'Archive',
 }
 
 const RESET_HINT: Record<ResetVisitsState, string> = {
@@ -179,8 +177,7 @@ const Perk = ({
 }) => {
   const level = levelOf(stop, visits)
   const here = stop.kind === 'root'
-  const unlocked =
-    here || visits.visited.has(stop.id) || (stop.kind === 'archive' && level.points > 0)
+  const unlocked = here || visits.visited.has(stop.id)
   const position = toPercent(stop)
   const aimHandlers = {
     onPointerEnter: onAim,

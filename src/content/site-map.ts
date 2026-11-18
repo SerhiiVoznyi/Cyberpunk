@@ -1,5 +1,4 @@
 import {
-  formatCompactCount,
   formatCount,
   formatPostDate,
   getJournalManifest,
@@ -18,22 +17,22 @@ import {
 
 export { type PerkIcon, perkIconUrl }
 
-/** One stop of the website map: every spread, plus the newest entries and the archive. */
+/** One stop of the website map: every spread, plus the newest entries. */
 export type SiteStop = {
   id: string
-  kind: 'root' | 'chapter' | 'entry' | 'archive'
+  kind: 'root' | 'chapter' | 'entry'
   /** The spread number for chapters, the filing position for entries. */
   number: string
   spread: SpreadMeta
-  /** 0 is the Map itself, 1 the chapters, 2 the entries filed under the Journal. */
+  /** 0 is the Map itself, 1 the chapters it opens, 2 the chapters and entries filed under those. */
   tier: 0 | 1 | 2
   parent: string | null
   icon: PerkIcon
   place: string
 }
 
-/** The map shows the newest few entries; the Archive stop opens the whole journal. */
-export const LATEST_ON_MAP = 3
+/** The map shows the newest entry; the Archive chapter opens the whole journal. */
+export const LATEST_ON_MAP = 1
 
 const entrySpread = (post: PostSummary): SpreadMeta => ({
   id: `post:${post.slug}`,
@@ -45,39 +44,19 @@ const entrySpread = (post: PostSummary): SpreadMeta => ({
   date: post.date,
 })
 
-const journalStops = (journal: SpreadMeta): SiteStop[] => {
-  const { latest, total } = getJournalManifest()
-  const stops: SiteStop[] = latest.slice(0, LATEST_ON_MAP).map((post) => ({
-    id: `post:${post.slug}`,
-    kind: 'entry',
-    number: `#${formatCount(post.position)}`,
-    spread: entrySpread(post),
-    tier: 2,
-    parent: journal.id,
-    icon: 'entry',
-    place: `Filed ${formatPostDate(post.date)}`,
-  }))
-  if (total > 0) {
-    stops.push({
-      id: 'archive',
-      kind: 'archive',
-      number: formatCompactCount(total),
-      spread: {
-        id: 'archive',
-        path: journal.path,
-        label: 'Archive',
-        chapter: 'Journal',
-        kind: 'paper',
-        teaser: `All ${formatCount(total)} entries: search, filter by tag, browse by month.`,
-      },
+const journalStops = (journal: SpreadMeta): SiteStop[] =>
+  getJournalManifest()
+    .latest.slice(0, LATEST_ON_MAP)
+    .map((post) => ({
+      id: `post:${post.slug}`,
+      kind: 'entry',
+      number: `#${formatCount(post.position)}`,
+      spread: entrySpread(post),
       tier: 2,
       parent: journal.id,
-      icon: 'archive',
-      place: `${formatCount(total)} entries filed`,
-    })
-  }
-  return stops
-}
+      icon: 'entry',
+      place: `Filed ${formatPostDate(post.date)}`,
+    }))
 
 const chapterStop = (
   spread: SpreadMeta,
@@ -88,13 +67,13 @@ const chapterStop = (
   kind: 'chapter',
   number,
   spread,
-  tier: 1,
-  parent: 'map',
+  tier: spread.parent ? 2 : 1,
+  parent: spread.parent ?? 'map',
   icon: perk.icon,
   place: perk.place,
 })
 
-// Reading order: the Map, then the chapters, with the Journal's entries right after it.
+// Reading order: the Map, then the chapters, with the Archive's entries right after it.
 const buildRoute = (): SiteStop[] =>
   SPREADS.flatMap((spread, index): SiteStop[] => {
     const number = formatSpreadNumber(index)

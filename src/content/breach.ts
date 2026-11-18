@@ -3,8 +3,8 @@
  * - an exact path: '/contact';
  * - '/prefix/*', everything under it but not the path itself ('/blog/*' guards every entry,
  *   not the Journal);
- * - '/prefix/**', the path and everything under it ('/experience/**' guards the Journal and every
- *   entry, read mode included).
+ * - '/prefix/**', the path and everything under it ('/experience/**' guards Experience,
+ *   Applications, Games and every item under them).
  * One solve opens a whole rule. This is a game gate, not access control: the content of every
  * route still ships to the client.
  */

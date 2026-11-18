@@ -22,7 +22,7 @@ const RESET_HINT: Record<ResetVisitsState, string> = {
   cleared: 'Cleared',
 }
 
-// Archive shares the Journal's path, so the current stop is matched by id, never by path.
+// An entry is matched by its own id; any other page by the chapter it belongs to.
 const currentStopId = (pathname: string) => {
   const slug = entrySlugOf(pathname)
   if (slug !== null) return `post:${slug}`
@@ -71,6 +71,7 @@ export const SiteMapList = () => {
             className={cx(
               'site-map-list__stop',
               `site-map-list__stop--tier-${stop.tier}`,
+              stop.kind === 'entry' && 'site-map-list__stop--entry',
             )}>
             {/* On the Map already, its own entry starts over instead of linking to itself. */}
             {stop.kind === 'root' && stop.id === current ? (

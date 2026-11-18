@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { type Location, Navigate, Route, Routes } from 'react-router-dom'
+import { type Location, Navigate, Route, Routes, useParams } from 'react-router-dom'
 
 import { protectedRuleFor } from './content/breach'
 import { SPREADS } from './content/spreads'
@@ -17,6 +17,22 @@ const REDIRECTS: Record<string, string> = {
   '/identity': '/profile',
   '/dossier': '/experience',
   '/uplink': '/contact',
+}
+
+/** Chapters that moved, with their child pages: `/games/:slug` lands on `/experience/games/:slug`. */
+const MOVED: Record<string, string> = {
+  '/applications': '/experience/applications',
+  '/games': '/experience/games',
+}
+
+const MovedChild = ({ to }: { to: string }) => {
+  const { slug = '' } = useParams()
+  return (
+    <Navigate
+      to={`${to}/${encodeURIComponent(slug)}`}
+      replace
+    />
+  )
 }
 
 // Phones get their own layout of every spread; both read the same content sections.
@@ -70,7 +86,14 @@ export const AppRouter = ({ location, locked }: AppRouterProps) => {
         }
         return routes
       })}
-      {Object.entries(REDIRECTS).map(([from, to]) => (
+      {Object.entries(MOVED).map(([from, to]) => (
+        <Route
+          key={`${from}:child`}
+          path={`${from}/:slug`}
+          element={<MovedChild to={to} />}
+        />
+      ))}
+      {Object.entries({ ...REDIRECTS, ...MOVED }).map(([from, to]) => (
         <Route
           key={from}
           path={from}

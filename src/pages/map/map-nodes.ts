@@ -54,7 +54,7 @@ const chapterSpot = (spread: SpreadMeta): Point => {
   return 'row' in board ? [CHAPTER_X, board.row] : [board.cell[0], board.cell[1]]
 }
 
-// A column of entries centres on the Journal row, then slides to stay inside the board.
+// A column of entries centres on the Archive row, then slides to stay inside the board.
 const entryRows = (count: number) => {
   const centre = chapterSpot(SPREADS[JOURNAL_INDEX])[1]
   if (count === 0) return []
@@ -67,22 +67,24 @@ const entryRows = (count: number) => {
   return rows.map((row) => snap(row + shift))
 }
 
-// Places each website-map stop on the board: the root at the left, chapters in a column on their
-// rows, and the Journal's entries and archive in a column beside it.
+// Places each website-map stop on the board: the root at the left, chapters on their rows or
+// cells, and the Archive's entries in a column beside it.
 const buildRoute = (): MapStop[] => {
-  const rows = entryRows(SITE_ROUTE.filter((stop) => stop.tier === 2).length)
+  const rows = entryRows(SITE_ROUTE.filter((stop) => stop.kind === 'entry').length)
   let entryRow = 0
 
   return SITE_ROUTE.map((stop, index) => {
-    const [x, y]: Point =
-      stop.tier === 0
-        ? ROOT
-        : stop.tier === 1
-          ? chapterSpot(stop.spread)
-          : [ENTRY_X, rows[entryRow++]]
-    const board = stop.tier === 1 ? stop.spread.board : undefined
+    const code = codeOf(index)
+    if (stop.kind === 'root')
+      return { ...stop, x: ROOT[0], y: ROOT[1], code, side: 'right' }
+    if (stop.kind === 'entry') {
+      const y = rows[entryRow++]
+      return { ...stop, x: ENTRY_X, y, code, side: 'right' }
+    }
+    const [x, y] = chapterSpot(stop.spread)
+    const board = stop.spread.board
     const lane = board && 'lane' in board ? board.lane : undefined
-    return { ...stop, x, y, code: codeOf(index), side: 'right', lane }
+    return { ...stop, x, y, code, side: 'right', lane }
   })
 }
 
@@ -90,9 +92,8 @@ const buildRoute = (): MapStop[] => {
 export const MAP_ROUTE: readonly MapStop[] = buildRoute()
 
 const SOCKET_CELLS: readonly Point[] = [
-  [472, 96],
-  [640, 148],
-  [640, 356],
+  [616, 96],
+  [616, 200],
 ]
 
 // Sockets fill open cells only, each wired to the closest tile to its left.

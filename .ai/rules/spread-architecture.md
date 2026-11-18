@@ -30,7 +30,7 @@ Invariants of the reader, the sheet stack and the page turn. Breaking one of the
 - Read mode sits outside the shell, so `/blog/:slug/read` redirects to the article (and its riddle) while locked.
 - Riddle state lives in `BreachGameProvider` above the sheet stack, because stacked sheets unmount their bodies. The riddle sheet stack sets `scrollDepth={false}` so the wheel never flips sheets mid-run.
 - This is a game gate, not access control: every route's content still ships to the client.
-- The free-play Breach Protocol game (`/games/breach-protocol`) runs its own `BreachGameProvider` and never calls `useBreachGate`, so playing it unlocks nothing. Keep game sessions away from the gate.
+- The free-play Breach Protocol game (`/experience/games/breach-protocol`) runs its own `BreachGameProvider` and never calls `useBreachGate`, so playing it unlocks nothing. Keep game sessions away from the gate.
 
 ## Collections
 

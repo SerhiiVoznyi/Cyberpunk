@@ -111,7 +111,10 @@ export const useSpreadNavigation = () => {
           } as EntryPosition)
         : null,
     hasPrevious: index > 0,
-    hasNext: slug !== null || child !== null || index < total - 1,
+    hasNext:
+      slug !== null
+        ? Boolean(entry?.older) || JOURNAL_INDEX < total - 1
+        : child !== null || index < total - 1,
     goPrevious,
     goNext,
     goMap,

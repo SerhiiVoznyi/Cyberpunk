@@ -21,14 +21,7 @@ export const PROFILE_SHEETS = {
     index: 3,
     title: 'Education',
     teaser: `${PROFILE.education.degree} · languages · credentials`,
-  },
-  channels: {
-    id: 'channels',
-    index: 4,
-    title: 'Channels',
-    teaser: 'LinkedIn · GitHub · Email',
     treatment: 'yellow',
-    edge: 'notched',
   },
 } satisfies Record<string, SheetMeta>
 

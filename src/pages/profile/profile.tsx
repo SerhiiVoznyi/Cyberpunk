@@ -12,7 +12,6 @@ import {
 } from '@/lib/sheet-stack'
 
 import {
-  ProfileChannels,
   ProfileEducation,
   ProfileRole,
   ProfileSummary,
@@ -64,9 +63,6 @@ export const ProfilePage = () => (
         </Sheet>
         <Sheet {...PROFILE_SHEETS.education}>
           <ProfileEducation />
-        </Sheet>
-        <Sheet {...PROFILE_SHEETS.channels}>
-          <ProfileChannels />
         </Sheet>
       </SheetStack>
     </SheetStackProvider>

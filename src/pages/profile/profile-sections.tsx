@@ -2,7 +2,6 @@ import {
   CorpName,
   HalftoneOverlay,
   NdaNote,
-  SocialLinks,
   Sticker,
   TagChip,
 } from '@/components'
@@ -111,5 +110,3 @@ export const ProfileEducation = ({ decorated = true }: SectionProps) => (
     </ul>
   </>
 )
-
-export const ProfileChannels = () => <SocialLinks />

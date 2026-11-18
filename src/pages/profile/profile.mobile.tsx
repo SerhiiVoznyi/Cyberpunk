@@ -12,7 +12,6 @@ import {
 } from '@/lib/sheet-stack'
 
 import {
-  ProfileChannels,
   ProfileEducation,
   ProfileRole,
   ProfileSummary,
@@ -42,9 +41,6 @@ export const ProfileMobile = () => (
         </Sheet>
         <Sheet {...PROFILE_SHEETS.education}>
           <ProfileEducation decorated={false} />
-        </Sheet>
-        <Sheet {...PROFILE_SHEETS.channels}>
-          <ProfileChannels />
         </Sheet>
       </SheetStack>
     </SheetStackProvider>

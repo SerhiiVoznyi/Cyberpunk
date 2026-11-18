@@ -1,8 +1,8 @@
 import { byNewest, type Shelf } from '../collections'
-import { NIGHT_FILE } from './night-file'
+import { REGISTRY_PENDING } from './registry-pending'
 
 /** Every application, newest first. Add one file per application and list it here. */
-export const APPLICATIONS = byNewest([NIGHT_FILE])
+export const APPLICATIONS = byNewest([REGISTRY_PENDING])
 
 export const APPLICATIONS_SHELF: Shelf = {
   spreadId: 'applications',

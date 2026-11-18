@@ -29,7 +29,7 @@ export type CollectionItem = {
   links: readonly CollectionLink[]
   /** Art plate for the detail spread; falls back to the chapter's plate. */
   cover?: string
-  /** Display codename in themed lists, such as `NIGHT_FILE.dmn`; derived from the slug if unset. */
+  /** Display codename in themed lists, such as `REGISTRY_PENDING.dmn`; derived from the slug if unset. */
   codename?: string
   /** Short at-a-glance facts for list cards and the detail spread, such as players or length. */
   facts?: readonly CollectionFact[]

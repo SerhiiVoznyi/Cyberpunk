@@ -1,7 +1,7 @@
 import type { CollectionItem } from '@/content/collections'
 import { formatSpreadNumber, type SpreadMeta, SPREADS } from '@/content/spreads'
 
-/** `night-file` becomes `NIGHT_FILE.dmn`, unless the item sets its own codename. */
+/** `registry-pending` becomes `REGISTRY_PENDING.dmn`, unless the item sets its own codename. */
 export const codenameOf = (item: CollectionItem, extension: string) =>
   item.codename ?? `${item.slug.toUpperCase().replace(/-/g, '_')}.${extension}`
 
